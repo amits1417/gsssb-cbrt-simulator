@@ -11,15 +11,23 @@ import database as db
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 EXAMS_DIR = os.path.join(BASE_DIR, 'exams')
 
-app = Flask(__name__, static_folder='static', template_folder='templates')
+app = Flask(
+    __name__,
+    static_folder=os.path.join(BASE_DIR, 'static'),
+    template_folder=os.path.join(BASE_DIR, 'templates')
+)
 app.secret_key = os.environ.get('SECRET_KEY', 'gsssb_cbrt_super_secret_key_2026_x89f21')
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-# Ensure directories exist
-os.makedirs(os.path.join(BASE_DIR, 'static', 'css'), exist_ok=True)
-os.makedirs(os.path.join(BASE_DIR, 'static', 'js'), exist_ok=True)
-os.makedirs(os.path.join(BASE_DIR, 'static', 'images'), exist_ok=True)
-os.makedirs(os.path.join(BASE_DIR, 'templates'), exist_ok=True)
+# Ensure directories exist safely (avoid crash on read-only serverless filesystems)
+try:
+    os.makedirs(os.path.join(BASE_DIR, 'static', 'css'), exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, 'static', 'js'), exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, 'static', 'images'), exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, 'templates'), exist_ok=True)
+except Exception:
+    pass
+
 
 # ----------------- Helper Decorators -----------------
 

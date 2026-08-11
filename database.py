@@ -5,19 +5,21 @@ import uuid
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
-import shutil
+def _get_db_path():
+    if os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME') or os.environ.get('LAMBDA_TASK_ROOT'):
+        temp_db = '/tmp/database.db'
+        orig_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database.db')
+        if not os.path.exists(temp_db) and os.path.exists(orig_db):
+            try:
+                import shutil
+                shutil.copyfile(orig_db, temp_db)
+            except Exception:
+                pass
+        return temp_db
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database.db')
 
-if os.environ.get('VERCEL'):
-    TEMP_DB = '/tmp/database.db'
-    ORIGINAL_DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database.db')
-    if not os.path.exists(TEMP_DB) and os.path.exists(ORIGINAL_DB):
-        try:
-            shutil.copyfile(ORIGINAL_DB, TEMP_DB)
-        except Exception:
-            pass
-    DB_PATH = TEMP_DB
-else:
-    DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database.db')
+DB_PATH = _get_db_path()
+
 
 
 def _load_dotenv(path=None):
