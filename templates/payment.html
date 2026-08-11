@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+
+{% block title %}Mock Test Subscription Plans - GSSSB CCE Exam Series{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Pricing Section Custom Styles */
+    .pricing-hero {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+    .pricing-tagline {
+        display: inline-block;
+        background: #eef2ff;
+        color: #4338ca;
+        padding: 0.35rem 0.85rem;
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+        border: 1px solid #c7d2fe;
+    }
+    .pricing-title {
+        font-size: 2.4rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
+    }
+    .pricing-subtitle {
+        color: #64748b;
+        font-size: 1.1rem;
+        max-width: 620px;
+        margin: 0 auto;
+        line-height: 1.5;
+    }
+
+    /* 3 Plans Grid */
+    .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+        align-items: stretch;
+    }
+    @media (max-width: 960px) {
+        .pricing-grid {
+            grid-template-columns: 1fr;
+            max-width: 440px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    }
+
+    .plan-card {
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 2rem 1.75rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+    }
+    .plan-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08);
+        border-color: #cbd5e1;
+    }
+    .plan-card.active-plan {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 2px #10b981, 0 12px 24px -4px rgba(16, 185, 129, 0.15) !important;
+    }
+
+    /* 6-Month Best Value Card (Prominent & Green Accent) */
+    .plan-card.best-value {
+        border: 2px solid #10b981;
+        background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 25%);
+        box-shadow: 0 10px 25px -3px rgba(16, 185, 129, 0.12);
+        transform: scale(1.02);
+    }
+    @media (max-width: 960px) {
+        .plan-card.best-value {
+            transform: scale(1);
+        }
+    }
+
+    /* Plan Badges */
+    .plan-badge {
+        position: absolute;
+        top: -13px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 0.3rem 0.9rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        white-space: nowrap;
+    }
+    .badge-popular {
+        background: #4338ca;
+        color: #ffffff;
+    }
+    .badge-best-value {
+        background: #10b981;
+        color: #ffffff;
+    }
+
+    .plan-header {
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    .plan-duration {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 0.35rem;
+    }
+    .plan-price-box {
+        margin: 0.75rem 0;
+    }
+    .plan-price {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1;
+    }
+    .plan-effective {
+        font-size: 0.95rem;
+        color: #64748b;
+        font-weight: 600;
+        margin-top: 0.35rem;
+    }
+    .effective-highlight {
+        color: #059669;
+        font-weight: 800;
+        font-size: 1.05rem;
+    }
+    .savings-badge {
+        display: inline-block;
+        background: #dcfce7;
+        color: #166534;
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        margin-top: 0.4rem;
+        border: 1px solid #bbf7d0;
+    }
+
+    .plan-features {
+        list-style: none;
+        padding: 0;
+        margin: 1.5rem 0 2rem 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        font-size: 0.9rem;
+        color: #334155;
+        border-top: 1px solid #f1f5f9;
+        padding-top: 1.25rem;
+    }
+    .plan-features li {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    .plan-features i {
+        color: #10b981;
+        font-size: 0.95rem;
+    }
+
+    .btn-plan {
+        width: 100%;
+        padding: 0.85rem 1.25rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+        border: none;
+        outline: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    .btn-plan-outline {
+        background: #f8fafc;
+        border: 1.5px solid #cbd5e1;
+        color: #334155;
+    }
+    .btn-plan-outline:hover {
+        background: #eef2ff;
+        border-color: #4338ca;
+        color: #4338ca;
+    }
+    .btn-plan-primary {
+        background: #4338ca;
+        color: white;
+    }
+    .btn-plan-primary:hover {
+        background: #3730a3;
+    }
+    .btn-plan-green {
+        background: #10b981;
+        color: white;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    .btn-plan-green:hover {
+        background: #059669;
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+    }
+
+    /* Trust Footer Banner */
+    .trust-banner {
+        text-align: center;
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: #475569;
+        margin-top: -1.5rem;
+        margin-bottom: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .trust-dot {
+        color: #cbd5e1;
+    }
+
+    /* Payment Panel */
+    .checkout-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        max-width: 850px;
+        margin: 0 auto 3rem auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1140px;">
+
+    <!-- Pricing Header Section -->
+    <div class="pricing-hero">
+        <div class="pricing-tagline">
+            <i class="fa-solid fa-graduation-cap"></i> GSSSB CCE Exam Series Pass
+        </div>
+        <h1 class="pricing-title">Prepare longer, save more.</h1>
+        <p class="pricing-subtitle">
+            Choose the plan that fits your preparation timeline. Unlock all 71 official CCE mock tests, scanned bilingual questions with official answer key, and statewide rankings.
+        </p>
+    </div>
+
+    <!-- 3 Pricing Cards Grid -->
+    <div class="pricing-grid">
+        
+        <!-- 1. 1 Month Plan (Standard Plan - ₹299) -->
+        <div class="plan-card active-plan" id="card_1_month" onclick="selectPlan('1_month', 299, '1 Month Plan (30 Days)', '299')">
+            <div class="plan-badge" style="background: #4338ca; color: white;">
+                <i class="fa-solid fa-calendar-day" style="margin-right: 4px;"></i> 1 MONTH PASS
+            </div>
+
+            <div>
+                <div class="plan-header">
+                    <div class="plan-duration">1 Month</div>
+                    <div style="font-size: 0.85rem; color: #64748b;">Standard Starter Plan</div>
+                    <div class="plan-price-box">
+                        <div class="plan-price" style="color: #1e1b4b;">
+                            ₹299
+                        </div>
+                        <div class="plan-effective" style="color: #4338ca; font-weight: 700;">₹299 / month</div>
+                    </div>
+                </div>
+
+                <ul class="plan-features">
+                    <li><i class="fa-solid fa-check"></i> <strong>30 Days Full Access</strong></li>
+                    <li><i class="fa-solid fa-check"></i> Full Mock Tests (All 71 Papers)</li>
+                    <li><i class="fa-solid fa-check"></i> With Official Answer Key</li>
+                    <li><i class="fa-solid fa-check"></i> Performance Analysis</li>
+                    <li><i class="fa-solid fa-check"></i> All Available Tests</li>
+                </ul>
+            </div>
+
+            <div>
+                <button type="button" class="btn-plan btn-plan-primary" id="btn_1_month">
+                    Select 1 Month (₹299)
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. 3 Months Plan (Most Popular - ₹499) -->
+        <div class="plan-card" id="card_3_months" onclick="selectPlan('3_months', 499, '3 Months Plan (90 Days)', '166')">
+            <div class="plan-badge badge-popular">
+                <i class="fa-solid fa-fire" style="margin-right: 4px;"></i> MOST POPULAR
+            </div>
+
+            <div>
+                <div class="plan-header">
+                    <div class="plan-duration">3 Months</div>
+                    <div style="font-size: 0.85rem; color: #64748b;">Comprehensive Preparation</div>
+                    <div class="plan-price-box">
+                        <div class="plan-price">₹499</div>
+                        <div class="plan-effective">Effective: <strong>₹166/month</strong></div>
+                        <div class="savings-badge">Save ₹398 (vs ₹897)</div>
+                    </div>
+                </div>
+
+                <ul class="plan-features">
+                    <li><i class="fa-solid fa-check"></i> <strong>90 Days Full Access</strong></li>
+                    <li><i class="fa-solid fa-check"></i> Full Mock Tests (All 71 Papers)</li>
+                    <li><i class="fa-solid fa-check"></i> With Official Answer Key</li>
+                    <li><i class="fa-solid fa-check"></i> Performance Analysis</li>
+                    <li><i class="fa-solid fa-check"></i> All Available Tests & Retakes</li>
+                    <li><i class="fa-solid fa-check"></i> <strong>Save ₹398</strong></li>
+                </ul>
+            </div>
+
+            <div>
+                <button type="button" class="btn-plan btn-plan-primary" id="btn_3_months">
+                    Select 3 Months (₹499)
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. 6 Months Plan (Best Value - ₹799) -->
+        <div class="plan-card best-value" id="card_6_months" onclick="selectPlan('6_months', 799, '6 Months Plan (180 Days)', '133')">
+            <div class="plan-badge badge-best-value">
+                <i class="fa-solid fa-crown" style="margin-right: 4px;"></i> BEST VALUE
+            </div>
+
+            <div>
+                <div class="plan-header">
+                    <div class="plan-duration" style="color: #065f46;">6 Months</div>
+                    <div style="font-size: 0.85rem; color: #047857; font-weight: 600;">Complete Unlimited Access</div>
+                    <div class="plan-price-box">
+                        <div class="plan-price" style="color: #065f46;">₹799</div>
+                        <div class="plan-effective effective-highlight">Only ₹133/month</div>
+                        <div class="savings-badge" style="background: #10b981; color: white; border: none; font-size: 0.85rem; padding: 0.25rem 0.75rem;">
+                            Save ₹995 (vs ₹1,794 standalone)
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="plan-features">
+                    <li><i class="fa-solid fa-circle-check" style="color: #10b981;"></i> <strong>180 Days Full Access</strong></li>
+                    <li><i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Full Mock Tests (All 71 Papers)</li>
+                    <li><i class="fa-solid fa-circle-check" style="color: #10b981;"></i> With Official Answer Key</li>
+                    <li><i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Performance Analysis & Graphs</li>
+                    <li><i class="fa-solid fa-circle-check" style="color: #10b981;"></i> All Available Tests & Retakes</li>
+                    <li><i class="fa-solid fa-circle-check" style="color: #10b981;"></i> <strong>Maximum Savings (Save ₹995)</strong></li>
+                </ul>
+            </div>
+
+            <div>
+                <button type="button" class="btn-plan btn-plan-green" id="btn_6_months">
+                    <i class="fa-solid fa-bolt"></i> Select 6 Months (₹799)
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Trust Footer Tagline -->
+    <div class="trust-banner">
+        <span><i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> Secure Online Payment</span>
+        <span class="trust-dot">&bull;</span>
+        <span><i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> Instant Access</span>
+        <span class="trust-dot">&bull;</span>
+        <span><i class="fa-solid fa-rotate-left" style="color: #4338ca;"></i> Cancel Anytime</span>
+    </div>
+
+    <!-- Interactive Checkout Panel -->
+    <div class="checkout-card" id="checkoutSection">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 1.25rem; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span class="badge badge-free" style="margin-bottom: 0.3rem;"><i class="fa-solid fa-cart-shopping"></i> Selected Plan</span>
+                <h3 id="selectedPlanTitle" style="font-size: 1.35rem; color: #1e293b;">1 Month Plan (30 Days) Access</h3>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.85rem; color: #64748b;">Total Amount Payable</div>
+                <div id="selectedPlanAmount" style="font-size: 2rem; font-weight: 800; color: #4338ca;">₹299</div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 2rem; align-items: start;">
+            
+            <!-- Left: Authentic Official Razorpay QR Code -->
+            <div style="text-align: center; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">
+                <div style="margin-bottom: 0.75rem;">
+                    <span class="badge" style="background: #1e1b4b; color: white; font-size: 0.75rem; padding: 0.35rem 0.85rem; border-radius: 9999px;">
+                        <i class="fa-solid fa-shield-halved" style="color: #4ade80; margin-right: 4px;"></i> Official Razorpay Merchant QR
+                    </span>
+                </div>
+
+                <!-- Razorpay QR Image -->
+                <div style="background: white; border-radius: 14px; padding: 12px; display: inline-block; box-shadow: 0 6px 20px rgba(0,0,0,0.08); border: 2px solid #e2e8f0; max-width: 250px;">
+                    <img id="razorpayCardImage" src="/static/images/razorpay_qr.jpg" alt="Official Razorpay UPI QR Code - AMIT" style="width: 100%; height: auto; border-radius: 8px; display: block;">
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <div style="font-size: 1.15rem; font-weight: 800; color: #1e293b;">
+                        Amount to Pay: <span id="displayPayableAmount" style="color: #4338ca; font-size: 1.35rem;">₹299</span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #475569; margin-top: 0.25rem;">
+                        Payee: <strong>AMIT</strong> (cce) &bull; Powered by Razorpay
+                    </div>
+                    <div style="margin-top: 0.6rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                        <code style="background: white; border: 1px solid #cbd5e1; padding: 0.3rem 0.65rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700; color: #1e1b4b;">
+                            amit109881.rzp@rxairtel
+                        </code>
+                        <button type="button" onclick="copyUpiId('amit109881.rzp@rxairtel')" class="btn btn-outline btn-sm" style="padding: 0.25rem 0.55rem; font-size: 0.8rem;" title="Copy UPI ID">
+                            <i class="fa-regular fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <div style="font-size: 0.75rem; color: #059669; font-weight: 700; margin-top: 0.5rem; background: #ecfdf5; padding: 4px 10px; border-radius: 4px; display: inline-block;">
+                        <i class="fa-solid fa-qrcode"></i> Scan with any UPI App (GPay / PhonePe / Paytm)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Direct Pay & UTR Verification Form -->
+            <div>
+                <!-- Direct UPI Intent for Mobile -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">
+                        Quick Pay on Mobile:
+                    </label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                        <a id="linkGpay" href="upi://pay?cu=INR&mc=8241&mode=19&pa=amit109881.rzp@rxairtel&tn=Payment%20To%20AMIT&tr=TSiL2omtBgwiwSqrv2" class="btn btn-outline btn-sm" style="font-size: 0.85rem;">
+                            <i class="fa-solid fa-mobile-screen"></i> GPay / PhonePe
+                        </a>
+                        <a id="linkPaytm" href="upi://pay?cu=INR&mc=8241&mode=19&pa=amit109881.rzp@rxairtel&tn=Payment%20To%20AMIT&tr=TSiL2omtBgwiwSqrv2" class="btn btn-outline btn-sm" style="font-size: 0.85rem;">
+                            <i class="fa-solid fa-wallet"></i> Paytm / BHIM
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Submit UTR Form -->
+                <form onsubmit="submitPayment(event)">
+                    <div style="margin-bottom: 1.25rem;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: #1e293b;">
+                            12-Digit UTR / Transaction Reference ID <span style="color: var(--danger);">*</span>
+                        </label>
+                        <input type="text" id="utrNumber" required placeholder="e.g. 423871928374" minlength="6" style="width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; font-weight: 600;">
+                        <span style="font-size: 0.75rem; color: #64748b; display: block; margin-top: 0.25rem;">Found in your payment receipt / SMS after making payment.</span>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: #1e293b;">
+                            Remark / Notes (Optional)
+                        </label>
+                        <input type="text" id="paymentNotes" placeholder="Payment app name or remark" style="width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none;">
+                    </div>
+
+                    {% if user %}
+                    <button type="submit" id="btnSubmitPayment" class="btn-plan btn-plan-green" style="font-size: 1rem; padding: 0.9rem;">
+                        <i class="fa-solid fa-circle-check"></i> Submit UTR & Activate Access
+                    </button>
+                    {% else %}
+                    <a href="/auth?next=/pricing" class="btn-plan btn-plan-primary" style="font-size: 1rem; text-decoration: none;">
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i> Login First to Subscribe
+                    </a>
+                    {% endif %}
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let currentPlanId = '1_month';
+    let currentPlanAmount = 299;
+    let currentPlanName = '1 Month Plan (30 Days)';
+    const upiId = 'amit109881.rzp@rxairtel';
+    const upiName = 'AMIT';
+
+    function selectPlan(planId, amount, planName, effectiveMonthly) {
+        currentPlanId = planId;
+        currentPlanAmount = amount;
+        currentPlanName = planName;
+
+        // Update card active classes
+        document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('active-plan'));
+        const card = document.getElementById(`card_${planId}`);
+        if (card) card.classList.add('active-plan');
+
+        // Update checkout section text
+        document.getElementById('selectedPlanTitle').innerText = `${planName} Access`;
+        document.getElementById('selectedPlanAmount').innerText = `₹${amount}`;
+        const dispPayable = document.getElementById('displayPayableAmount');
+        if (dispPayable) dispPayable.innerText = `₹${amount}`;
+
+        // Update Dynamic QR Code image with embedded amount (am=amount)
+        const qrImage = document.getElementById('razorpayCardImage');
+        if (qrImage) {
+            qrImage.src = `/api/qr-code?amount=${amount}&plan=${encodeURIComponent(planName)}`;
+        }
+
+        // Direct intent links for mobile apps with embedded amount (am=amount)
+        const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${amount}&cu=INR&tn=${encodeURIComponent('GSSSB CCE ' + planName)}`;
+        const gpay = document.getElementById('linkGpay');
+        const paytm = document.getElementById('linkPaytm');
+        if (gpay) gpay.href = upiUrl;
+        if (paytm) paytm.href = upiUrl;
+
+        // Smooth scroll to checkout
+        document.getElementById('checkoutSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function copyUpiId(id) {
+        navigator.clipboard.writeText(id);
+        showToast('UPI ID copied to clipboard: ' + id, 'success');
+    }
+
+    async function submitPayment(e) {
+        e.preventDefault();
+        const utr = document.getElementById('utrNumber').value.trim();
+        const notes = document.getElementById('paymentNotes').value.trim();
+        const btn = document.getElementById('btnSubmitPayment');
+
+        if (!utr || utr.length < 6) {
+            showToast('Please enter a valid 12-digit UTR / Transaction Reference ID', 'error');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+
+        try {
+            const res = await fetch('/api/payment/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    utr_number: utr,
+                    notes: notes,
+                    amount: currentPlanAmount,
+                    plan_name: currentPlanName
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(data.message, 'success');
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 2000);
+            } else {
+                showToast(data.error || 'Submission failed', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Submit UTR & Activate Access';
+            }
+        } catch (err) {
+            showToast('Network error, please try again', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Submit UTR & Activate Access';
+        }
+    }
+</script>
+{% endblock %}

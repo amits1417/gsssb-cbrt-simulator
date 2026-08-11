@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Dashboard & Analytics - GSSSB CCE{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Candidate Profile Banner -->
+    <div class="user-profile-banner">
+        <div class="user-info-flex">
+            <div class="user-avatar">
+                {{ user.name[0]|upper }}
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <h2 style="font-size: 1.5rem;">{{ user.name }}</h2>
+                    {% if user.is_paid %}
+                    <span class="badge badge-pro"><i class="fa-solid fa-crown"></i> PRO SUBSCRIBER</span>
+                    {% if user.days_remaining %}
+                    <span class="badge" style="background: #e0e7ff; color: #4338ca; font-weight: 600;">
+                        <i class="fa-regular fa-clock"></i> {{ user.days_remaining }} Days Left (Till {{ user.expires_date_formatted }})
+                    </span>
+                    {% endif %}
+                    {% elif user.subscription_expired %}
+                    <span class="badge" style="background: #fee2e2; color: #dc2626; font-weight: 700;">
+                        <i class="fa-solid fa-clock-rotate-left"></i> PLAN EXPIRED
+                    </span>
+                    {% else %}
+                    <span class="badge badge-free"><i class="fa-solid fa-gift"></i> FREE TRIAL (2 Papers)</span>
+                    {% endif %}
+                </div>
+                <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">
+                    <i class="fa-regular fa-envelope" style="margin-right: 4px;"></i> {{ user.email }}
+                    {% if user.phone %} &bull; <i class="fa-solid fa-phone" style="margin-right: 4px;"></i> {{ user.phone }}{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            {% if not user.is_paid %}
+            <a href="/pricing" class="btn btn-accent">
+                <i class="fa-solid fa-crown"></i> {% if user.subscription_expired %}Renew Subscription{% else %}Unlock All 71 Tests{% endif %}
+            </a>
+            {% else %}
+            <a href="/" class="btn btn-primary">
+                <i class="fa-solid fa-play"></i> Take a Mock Test
+            </a>
+            {% endif %}
+
+            <button type="button" onclick="openGlobalSupportModal('msg')" class="btn btn-outline" style="background: white; border-color: #0284c7; color: #0284c7; font-weight: 600;">
+                <i class="fa-solid fa-headset"></i> Contact Support / સપોર્ટ
+            </button>
+        </div>
+    </div>
+
+    {% if user.subscription_expired %}
+    <div style="background: #fef2f2; border: 1.5px solid #fecaca; border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fa-solid fa-circle-exclamation" style="color: #ef4444; font-size: 1.5rem;"></i>
+            <div>
+                <strong style="color: #991b1b; display: block;">Subscription Validity Ended</strong>
+                <span style="color: #b91c1c; font-size: 0.88rem;">Your mock test pass has expired. Renew your plan to regain full access to all 71 tests with official answer keys.</span>
+            </div>
+        </div>
+        <a href="/pricing" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-rotate"></i> Renew Now
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- 4 Key Performance Metric Cards -->
+    <div class="stats-cards-grid">
+        <div class="stat-card">
+            <div class="stat-icon primary"><i class="fa-solid fa-file-lines"></i></div>
+            <div>
+                <div class="stat-value">{{ stats.total_tests }}</div>
+                <div class="stat-label">Tests Attempted</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon success"><i class="fa-solid fa-bullseye"></i></div>
+            <div>
+                <div class="stat-value">{{ stats.avg_score }}</div>
+                <div class="stat-label">Average Net Score</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon accent"><i class="fa-solid fa-medal"></i></div>
+            <div>
+                <div class="stat-value">{{ stats.best_score }}</div>
+                <div class="stat-label">Highest Score Achieved</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon danger"><i class="fa-solid fa-trophy"></i></div>
+            <div>
+                <div class="stat-value">#{{ stats.user_rank }}</div>
+                <div class="stat-label">Statewide Rank ({{ stats.percentile }}%ile)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visual Analytics Charts (Chart.js) -->
+    <div class="charts-grid">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.15rem;"><i class="fa-solid fa-chart-line" style="color: var(--primary); margin-right: 6px;"></i> Score Progression Over Time</h3>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Net Marks per Test</span>
+            </div>
+            <div style="height: 280px; position: relative;">
+                <canvas id="scoreTrendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.15rem;"><i class="fa-solid fa-chart-pie" style="color: var(--success); margin-right: 6px;"></i> Accuracy & MCQ Split</h3>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Overall Attempt Ratio</span>
+            </div>
+            <div style="height: 280px; position: relative;">
+                <canvas id="accuracyPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Test Attempts History Table -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3><i class="fa-solid fa-clock-rotate-left" style="color: var(--primary); margin-right: 6px;"></i> Mock Test Attempt History</h3>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Total attempts: {{ stats.history|length }}</span>
+        </div>
+
+        {% if stats.history and stats.history|length > 0 %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Exam Paper</th>
+                        <th style="text-align: center;">Correct</th>
+                        <th style="text-align: center;">Incorrect</th>
+                        <th style="text-align: center;">Unattempted</th>
+                        <th style="text-align: center;">Net Score</th>
+                        <th style="text-align: center;">Accuracy</th>
+                        <th style="text-align: center;">Time</th>
+                        <th style="text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in stats.history|reverse %}
+                    <tr>
+                        <td style="font-size: 0.85rem; color: var(--text-muted);">{{ h.created_at[:16] }}</td>
+                        <td style="font-weight: 700; color: var(--dark);">{{ h.exam_id }}</td>
+                        <td style="text-align: center; color: var(--success); font-weight: 600;">+{{ h.correct_count }}</td>
+                        <td style="text-align: center; color: var(--danger); font-weight: 600;">-{{ h.incorrect_count }}</td>
+                        <td style="text-align: center; color: var(--text-muted);">{{ h.unattempted_count }}</td>
+                        <td style="text-align: center; font-weight: 800; color: var(--primary); font-size: 1.05rem;">{{ h.net_score }}</td>
+                        <td style="text-align: center; font-weight: 600;">{{ h.accuracy }}%</td>
+                        <td style="text-align: center; font-size: 0.85rem;">{{ (h.time_taken_seconds // 60) }}m {{ (h.time_taken_seconds % 60) }}s</td>
+                        <td style="text-align: center;">
+                            <button onclick="viewAttemptReview({{ h.id }})" class="btn btn-outline btn-sm">
+                                <i class="fa-solid fa-eye"></i> Review
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+            <i class="fa-solid fa-file-circle-question" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+            <p style="font-size: 1.1rem; font-weight: 600; color: var(--dark); margin-bottom: 0.5rem;">No Mock Tests Attempted Yet</p>
+            <p style="font-size: 0.9rem; margin-bottom: 1.5rem;">Take your first free mock test now to generate performance graphs and leaderboard ranking!</p>
+            <a href="/exam/PAPER-1" class="btn btn-primary"><i class="fa-solid fa-play"></i> Start Paper-1 (Free)</a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Attempt Review Modal -->
+<div class="modal-overlay" id="reviewModal">
+    <div class="modal-box" style="max-width: 800px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+            <h3 id="modalExamTitle">Test Attempt Review</h3>
+            <button onclick="closeReviewModal()" class="btn btn-outline btn-sm"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div id="modalAttemptSummary" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; text-align: center;">
+            <!-- Dynamically filled -->
+        </div>
+
+        <div id="modalQuestionsReviewList" style="max-height: 450px; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; padding-right: 0.5rem;">
+            <!-- Questions list -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const historyData = {{ stats.history|tojson }};
+    const totalCorrect = {{ stats.total_correct }};
+    const totalIncorrect = {{ stats.total_incorrect }};
+    const totalUnattempted = {{ stats.total_unattempted }};
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initTrendChart();
+        initAccuracyPie();
+    });
+
+    function initTrendChart() {
+        const ctx = document.getElementById('scoreTrendChart');
+        if (!ctx) return;
+
+        const labels = historyData.map((h, i) => `${h.exam_id} (#${i+1})`);
+        const scores = historyData.map(h => h.net_score);
+
+        if (scores.length === 0) {
+            labels.push('Demo Paper');
+            scores.push(0);
+        }
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Net Score',
+                    data: scores,
+                    borderColor: '#4338ca',
+                    backgroundColor: 'rgba(67, 56, 202, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#4338ca',
+                    pointRadius: 5,
+                    borderWidth: 2.5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: { color: '#f1f5f9' },
+                        title: { display: true, text: 'Net Marks' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function initAccuracyPie() {
+        const ctx = document.getElementById('accuracyPieChart');
+        if (!ctx) return;
+
+        const tot = totalCorrect + totalIncorrect + totalUnattempted;
+        const data = tot > 0 ? [totalCorrect, totalIncorrect, totalUnattempted] : [1, 0, 0];
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Correct', 'Incorrect', 'Unattempted'],
+                datasets: [{
+                    data: data,
+                    backgroundColor: ['#10b981', '#ef4444', '#cbd5e1'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+
+    async function viewAttemptReview(attemptId) {
+        try {
+            const res = await fetch(`/api/dashboard/attempt/${attemptId}`);
+            const data = await res.json();
+            if (!res.ok) {
+                showToast(data.error || 'Failed to fetch details', 'error');
+                return;
+            }
+
+            const att = data.attempt;
+            document.getElementById('modalExamTitle').innerText = `${att.exam_id} - Question & Official Answer Key Review`;
+            
+            document.getElementById('modalAttemptSummary').innerHTML = `
+                <div style="background: #f8fafc; padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Net Score</div>
+                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--primary);">${att.net_score}</div>
+                </div>
+                <div style="background: #ecfdf5; padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid #a7f3d0;">
+                    <div style="font-size: 0.75rem; color: #065f46;">Correct</div>
+                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--success);">+${att.correct_count}</div>
+                </div>
+                <div style="background: #fef2f2; padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid #fecaca;">
+                    <div style="font-size: 0.75rem; color: #991b1b;">Incorrect</div>
+                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--danger);">${att.incorrect_count}</div>
+                </div>
+                <div style="background: #f8fafc; padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Accuracy</div>
+                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--dark);">${att.accuracy}%</div>
+                </div>
+            `;
+
+            // Load paper questions to show answers
+            const qRes = await fetch(`/api/exams/${att.exam_id}/questions`);
+            const qData = await qRes.json();
+            const questions = qData.questions || [];
+            const userAnswers = att.answers || {};
+
+            const container = document.getElementById('modalQuestionsReviewList');
+            container.innerHTML = '';
+
+            questions.forEach((q, idx) => {
+                const uAns = userAnswers[String(q.number)] || userAnswers[idx+1];
+                const cAns = q.correct_option_index;
+                const isCorrect = uAns && parseInt(uAns) === cAns;
+                const isUnattempted = !uAns || uAns == 5;
+
+                const qCard = document.createElement('div');
+                qCard.style.cssText = `border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; background: ${isCorrect ? '#f0fdf4' : (isUnattempted ? '#f8fafc' : '#fef2f2')};`;
+                
+                qCard.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 0.5rem;">
+                        <span>Q.${q.number}</span>
+                        <span style="font-size: 0.85rem; color: ${isCorrect ? 'var(--success)' : (isUnattempted ? 'var(--text-muted)' : 'var(--danger)')};">
+                            ${isCorrect ? '<i class="fa-solid fa-circle-check"></i> Correct (+1.0)' : (isUnattempted ? '<i class="fa-solid fa-circle-minus"></i> Unattempted (0.0)' : '<i class="fa-solid fa-circle-xmark"></i> Incorrect (-0.33)')}
+                        </span>
+                    </div>
+                    <div style="font-size: 0.95rem; margin-bottom: 0.75rem; white-space: pre-line;">${q.english_prompt || ''}</div>
+                    ${q.gujarati_prompt_path ? `<img src="/${q.gujarati_prompt_path}" style="max-width: 100%; border-radius: 4px; margin-bottom: 0.75rem; border: 1px solid var(--border);">` : ''}
+                    <div style="font-size: 0.85rem; font-weight: 600; display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                        <span>Your Answer: <strong style="color: ${isCorrect ? 'var(--success)' : (isUnattempted ? 'var(--text-muted)' : 'var(--danger)')};">${uAns == 5 ? 'E (Not Attempted)' : (uAns ? 'Option ' + String.fromCharCode(64 + parseInt(uAns)) : 'None')}</strong></span>
+                        <span>Correct Answer: <strong style="color: var(--success);">Option ${String.fromCharCode(64 + parseInt(cAns))}</strong></span>
+                    </div>
+                `;
+                container.appendChild(qCard);
+            });
+
+            document.getElementById('reviewModal').classList.add('active');
+        } catch (err) {
+            showToast('Failed to load review', 'error');
+        }
+    }
+
+    function closeReviewModal() {
+        document.getElementById('reviewModal').classList.remove('active');
+    }
+</script>
+{% endblock %}

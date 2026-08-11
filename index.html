@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSSSB Online CBRT Practice Exam</title>
+    <link rel="stylesheet" href="exam.css">
+</head>
+<body>
+
+    <!-- 1. HOME SCREEN -->
+    <div id="homeScreen" style="padding: 40px; max-width: 800px; margin: 0 auto; background-color: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-top: 50px;">
+        <h1 style="color: #4b6584; text-align: center; margin-bottom: 30px; font-size: 26px;">
+            GSSSB Online CBRT Exam Simulator
+        </h1>
+        
+        <div style="background-color: #f5f6fa; border: 1px solid #d1d8e0; border-radius: 6px; padding: 25px; margin-bottom: 30px;">
+            <label for="examSelect" style="font-weight: bold; font-size: 16px; display: block; margin-bottom: 10px;">Select Question Paper:</label>
+            <select id="examSelect" style="width: 100%; padding: 12px; font-size: 16px; border: 1.5px solid #a5b1c2; border-radius: 4px; background-color: white; cursor: pointer; outline: none; margin-bottom: 20px;">
+                <!-- Dynamically filled -->
+            </select>
+            
+            <button onclick="startSelectedExam()" style="width: 100%; padding: 12px 20px; font-size: 16px; font-weight: bold; background-color: #20bf6b; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.2s;">
+                Start Practice Test
+            </button>
+        </div>
+
+        <div style="border: 1.5px dashed #4b6584; padding: 20px; border-radius: 6px; font-size: 14px; line-height: 1.6; color: #2f3640;">
+            <h3 style="margin-top: 0; color: #eb3b5a;">Important Instructions:</h3>
+            <ul>
+                <li><strong>CBRT Simulation:</strong> Replicates GSSSB class-III Combined Competitive Exam layout.</li>
+                <li><strong>Timer:</strong> Practice test duration is <strong>60 minutes</strong>. The test will auto-submit when the timer ends.</li>
+                <li><strong>Marking Scheme:</strong> Correct answers yield <strong>+1.0 mark</strong>. Incorrect answers carry a negative mark of <strong>-0.33</strong>. Unattempted questions carry 0 marks.</li>
+                <li><strong>Bilingual View:</strong> English text displays dynamically alongside scanned Gujarati script images.</li>
+                <li><strong>Answers Hidden:</strong> Original PDF checkmark symbols are dynamically removed from option choices.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 2. EXAM WINDOW SCREEN -->
+    <div id="examScreen" style="display: none;">
+        <header class="exam-header">
+            <div class="exam-title">
+                <h2 id="headerSubjectTitle">GSSSB Combined Competitive Exam (Class-III)</h2>
+            </div>
+            <div class="header-right">
+                <div class="timer-box" id="timer">Time Left: 60:00</div>
+            </div>
+        </header>
+
+        <div class="main-container">
+            <!-- Left: Question Display -->
+            <div class="question-panel">
+                <div class="section-info">SECTION: Combine Competitive Exam Group A & B</div>
+                <div class="question-header" id="qNumberTitle">Question No. 1</div>
+                
+                <div class="question-content">
+                    <!-- English Text Prompt -->
+                    <div class="question-text-eng" id="qTextEng">Loading question prompt text...</div>
+                    <!-- Gujarati Image Prompt (optional, dynamically toggled) -->
+                    <img class="question-img-guj" id="qImgGuj" src="" alt="Question prompt Gujarati">
+                    
+                    <!-- Option Rows -->
+                    <div class="options-container" style="margin-top: 20px;">
+                        <div class="option-row" id="optRow_1">
+                            <input type="radio" name="examOption" id="optRadio_1" value="1">
+                            <div class="option-text-container">
+                                <span class="option-num">A.</span>
+                                <img class="option-img" id="optImg_1" src="" alt="Option A">
+                            </div>
+                        </div>
+                        <div class="option-row" id="optRow_2">
+                            <input type="radio" name="examOption" id="optRadio_2" value="2">
+                            <div class="option-text-container">
+                                <span class="option-num">B.</span>
+                                <img class="option-img" id="optImg_2" src="" alt="Option B">
+                            </div>
+                        </div>
+                        <div class="option-row" id="optRow_3">
+                            <input type="radio" name="examOption" id="optRadio_3" value="3">
+                            <div class="option-text-container">
+                                <span class="option-num">C.</span>
+                                <img class="option-img" id="optImg_3" src="" alt="Option C">
+                            </div>
+                        </div>
+                        <div class="option-row" id="optRow_4">
+                            <input type="radio" name="examOption" id="optRadio_4" value="4">
+                            <div class="option-text-container">
+                                <span class="option-num">D.</span>
+                                <img class="option-img" id="optImg_4" src="" alt="Option D">
+                            </div>
+                        </div>
+                        <div class="option-row" id="optRow_5">
+                            <input type="radio" name="examOption" id="optRadio_5" value="5">
+                            <div class="option-text-container">
+                                <span class="option-num">E.</span>
+                                <span style="font-weight: bold; font-size: 15px; color: #eb3b5a; margin-left: 8px;">Not Attempted (અનએટેમ્પ્ટેડ)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Candidate Profile and Palette -->
+            <div class="sidebar-panel">
+                <div class="candidate-info-box">
+                    <div class="candidate-photo">
+                        Candidate Photo
+                    </div>
+                    <div class="candidate-details">
+                        Candidate Name: <strong>Candidate User</strong><br>
+                        Exam Code: <strong>GSSSB-212</strong><br>
+                        System Number: <strong>C001</strong>
+                    </div>
+                </div>
+
+                <div class="palette-container">
+                    <div class="palette-title">Question Palette:</div>
+                    <div class="palette-grid" id="paletteGrid">
+                        <!-- Palette Buttons generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Legend of Palette States -->
+                <div class="legend-box">
+                    <div class="palette-title" style="margin-bottom: 5px;">Legend:</div>
+                    <div class="legend-grid">
+                        <div class="legend-item">
+                            <div class="legend-icon answered">1</div>
+                            <span>Answered</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon not-answered">1</div>
+                            <span>Not Answered</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon marked">1</div>
+                            <span>Marked for Review</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon marked-answered">1</div>
+                            <span>Answered & Marked</span>
+                        </div>
+                        <div class="legend-item" style="grid-column: span 2;">
+                            <div class="legend-icon not-visited">1</div>
+                            <span>Not Visited</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="exam-footer">
+            <div class="footer-left">
+                <button class="btn btn-default" id="btnMarkNext">Mark for Review & Next</button>
+                <button class="btn btn-default" id="btnClear">Clear Response</button>
+            </div>
+            <div class="footer-right">
+                <button class="btn btn-primary" id="btnSaveNext">Save & Next</button>
+                <button class="btn btn-success" id="btnSubmit">Submit</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 3. EXAM RESULTS SCREEN -->
+    <div id="resultsScreen" style="display: none; padding: 40px; max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-top: 50px;">
+        <h1 style="color: #4b6584; text-align: center; margin-bottom: 25px; font-size: 24px;">Exam Summary Report</h1>
+        
+        <table class="summary-table" style="width: 100%; margin-bottom: 25px; border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <th style="padding: 12px; background-color: #f5f6fa; border: 1px solid #ddd;">Total Questions</th>
+                    <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold; text-align: center;" id="resTotal">100</td>
+                </tr>
+                <tr>
+                    <th style="padding: 12px; background-color: #f5f6fa; border: 1px solid #ddd; color: #20bf6b;">Correct Answers</th>
+                    <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold; text-align: center; color: #20bf6b;" id="resCorrect">0</td>
+                </tr>
+                <tr>
+                    <th style="padding: 12px; background-color: #f5f6fa; border: 1px solid #ddd; color: #eb3b5a;">Incorrect Answers</th>
+                    <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold; text-align: center; color: #eb3b5a;" id="resIncorrect">0</td>
+                </tr>
+                <tr>
+                    <th style="padding: 12px; background-color: #f5f6fa; border: 1px solid #ddd; color: #7f8c8d;">Unattempted Questions</th>
+                    <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold; text-align: center; color: #7f8c8d;" id="resUnattempted">0</td>
+                </tr>
+                <tr style="background-color: #e3ecef; font-size: 18px;">
+                    <th style="padding: 15px; border: 2px solid #a5b1c2; font-weight: bold;">Final Net Score</th>
+                    <td style="padding: 15px; border: 2px solid #a5b1c2; font-weight: bold; text-align: center; color: #2f80ed;" id="resScore">0.00</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3 style="color: #2c3e50; border-bottom: 2px solid #ccc; margin-top: 30px; padding-bottom: 5px;">Question Review Panel</h3>
+        <div id="reviewContainer" style="max-height: 500px; overflow-y: auto; margin-bottom: 25px; border: 1.5px solid #d1d8e0; border-radius: 6px; padding: 15px; background-color: #f5f6fa;">
+            <!-- Dynamically filled review questions -->
+        </div>
+        
+        <button onclick="backToHome()" style="width: 100%; padding: 12px; font-size: 16px; font-weight: bold; background-color: #4b6584; color: white; border: none; border-radius: 4px; cursor: pointer; text-align: center; transition: background-color 0.2s;">
+            Back to Home
+        </button>
+    </div>
+
+    <!-- 4. SUBMIT CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="submitModal">
+        <div class="summary-modal">
+            <div class="summary-title">Submit Exam Confirmation</div>
+            <p style="text-align: center; font-size: 14px; color: #555; margin-bottom: 20px;">Please review your answers before submitting:</p>
+            
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th style="text-align: center;">Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Answered</td>
+                        <td style="text-align: center; font-weight: bold;" id="statAnswered">0</td>
+                    </tr>
+                    <tr>
+                        <td>Not Answered</td>
+                        <td style="text-align: center; font-weight: bold;" id="statNotAnswered">0</td>
+                    </tr>
+                    <tr>
+                        <td>Marked for Review</td>
+                        <td style="text-align: center; font-weight: bold;" id="statMarked">0</td>
+                    </tr>
+                    <tr>
+                        <td>Answered & Marked for Review</td>
+                        <td style="text-align: center; font-weight: bold;" id="statMarkedAnswered">0</td>
+                    </tr>
+                    <tr>
+                        <td>Not Visited</td>
+                        <td style="text-align: center; font-weight: bold;" id="statNotVisited">0</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="summary-buttons">
+                <button class="btn btn-default" id="modalClose">Cancel</button>
+                <button class="btn btn-success" id="modalSubmit">Submit Exam</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="exams_list.js"></script>
+    <script src="exam.js"></script>
+</body>
+</html>

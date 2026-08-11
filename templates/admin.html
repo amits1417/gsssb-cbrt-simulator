@@ -1,0 +1,733 @@
+{% extends "base.html" %}
+
+{% block title %}Super Admin Portal - GSSSB CCE{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Admin Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <span class="badge" style="background: #312e81; color: white; margin-bottom: 0.5rem;"><i class="fa-solid fa-shield-halved"></i> ADMIN CONTROL CENTER</span>
+            <h2>Platform Management & Subscription Controls</h2>
+        </div>
+        <div>
+            <a href="/dashboard" class="btn btn-outline btn-sm"><i class="fa-solid fa-arrow-left"></i> Candidate View</a>
+        </div>
+    </div>
+
+    <!-- Admin Metric Cards -->
+    <div class="stats-cards-grid">
+        <div class="stat-card">
+            <div class="stat-icon primary"><i class="fa-solid fa-users"></i></div>
+            <div>
+                <div class="stat-value">{{ stats.total_users }}</div>
+                <div class="stat-label">Registered Candidates</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon success"><i class="fa-solid fa-crown"></i></div>
+            <div>
+                <div class="stat-value">{{ stats.paid_users }}</div>
+                <div class="stat-label">Pro Subscribers (Paid)</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon accent"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+            <div>
+                <div class="stat-value">₹{{ stats.total_revenue }}</div>
+                <div class="stat-label">Total Revenue</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon danger"><i class="fa-solid fa-clock"></i></div>
+            <div>
+                <div class="stat-value">{{ stats.pending_payments }}</div>
+                <div class="stat-label">Pending UTR Payments</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Requests Table -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3><i class="fa-solid fa-receipt" style="color: var(--accent); margin-right: 6px;"></i> Payment & UTR Submissions</h3>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">{{ payments|length }} Total requests</span>
+        </div>
+
+        {% if payments and payments|length > 0 %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Pay ID</th>
+                        <th>Candidate User ID & UID</th>
+                        <th>Candidate Name & Contact</th>
+                        <th>UTR / Reference ID</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Submitted At</th>
+                        <th style="text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payments %}
+                    <tr>
+                        <td style="font-weight: 700; color: var(--text-muted);">#{{ p.id }}</td>
+                        <td style="font-weight: 700; color: var(--dark);">
+                            User #{{ p.user_id }}<br>
+                            <span style="font-size: 0.72rem; color: var(--primary); font-weight: 700;">{{ p.user_uid or 'N/A' }}</span>
+                        </td>
+                        <td style="font-size: 0.85rem;">
+                            <b>{{ p.user_name }}</b><br>
+                            <span style="color: var(--text-muted);">{{ p.user_email }}</span><br>
+                            <span style="color: var(--primary);">{{ p.user_phone }}</span>
+                        </td>
+                        <td><code style="font-weight: 700; color: var(--primary); background: #eef2ff; padding: 2px 6px; border-radius: 4px;">{{ p.utr_number }}</code></td>
+                        <td style="font-weight: 700;">₹{{ p.amount }}</td>
+                        <td>
+                            {% if p.status == 'approved' %}
+                            <span class="badge badge-free">APPROVED</span>
+                            {% elif p.status == 'rejected' %}
+                            <span class="badge badge-locked">REJECTED</span>
+                            {% else %}
+                            <span class="badge" style="background: #fef3c7; color: #b45309;">PENDING</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 0.82rem; color: var(--text-muted);">{{ p.created_at[:16] }}</td>
+                        <td style="text-align: center;">
+                            {% if p.status == 'pending' %}
+                            <button onclick="verifyPayment({{ p.id }}, 'approve')" class="btn btn-primary btn-sm" style="background: var(--success); margin-right: 4px;">
+                                <i class="fa-solid fa-check"></i> Approve
+                            </button>
+                            <button onclick="verifyPayment({{ p.id }}, 'reject')" class="btn btn-danger btn-sm">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                            {% else %}
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">No payment requests yet.</div>
+        {% endif %}
+    </div>
+
+    <!-- All Users & 1-Click Subscription Activator -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <h3><i class="fa-solid fa-users-gear" style="color: var(--primary); margin-right: 6px;"></i> User Management & 1-Click Access Toggle</h3>
+            <input type="text" id="adminSearchUser" onkeyup="filterAdminUsers()" placeholder="Search by name, email, phone..." style="padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem; outline: none; width: 280px;">
+        </div>
+
+        <div class="table-container">
+            <table class="table" id="adminUsersTable">
+                <thead>
+                    <tr>
+                        <th>User ID / UID</th>
+                        <th>Name</th>
+                        <th>Email & Phone</th>
+                        <th style="text-align: center;">Tests Given</th>
+                        <th style="text-align: center;">Avg Score</th>
+                        <th style="text-align: center;">Status & Validity Countdown</th>
+                        <th style="text-align: center;">Subscription Action</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td style="font-weight: 700; color: var(--dark);">
+                            User #{{ u.id }}<br>
+                            <span style="font-size: 0.72rem; color: var(--primary); font-weight: 700;">{{ u.user_uid or 'N/A' }}</span>
+                        </td>
+                        <td style="font-weight: 700; color: var(--dark);">
+                            {{ u.name }}
+                            {% if u.is_admin %}<span class="badge" style="background: #1e1b4b; color: white; margin-left: 4px; font-size: 0.65rem;">ADMIN</span>{% endif %}
+                        </td>
+                        <td style="font-size: 0.85rem;">{{ u.email }}<br><span style="color: var(--text-muted);">{{ u.phone or 'No phone' }}</span></td>
+                        <td style="text-align: center; font-weight: 600;">{{ u.tests_count }}</td>
+                        <td style="text-align: center; font-weight: 700; color: var(--primary);">{{ u.avg_score }}</td>
+                        <td style="text-align: center;">
+                            {% if u.is_admin %}
+                            <span class="badge" style="background: #1e1b4b; color: white;"><i class="fa-solid fa-shield-halved"></i> SUPER ADMIN</span>
+                            <div style="font-size: 0.72rem; color: #64748b; margin-top: 3px;">Permanent Access</div>
+                            {% elif u.is_paid %}
+                            <span class="badge badge-pro"><i class="fa-solid fa-crown"></i> PRO (PAID)</span>
+                            <div style="font-size: 0.8rem; font-weight: 700; color: #059669; margin-top: 4px;">
+                                <i class="fa-solid fa-hourglass-half"></i> {{ u.countdown_text }}
+                            </div>
+                            <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">
+                                Till: {{ u.expires_formatted }}
+                            </div>
+                            {% elif u.countdown_text == 'Expired' %}
+                            <span class="badge" style="background: #fee2e2; color: #dc2626; font-weight: 700;">
+                                <i class="fa-solid fa-clock-rotate-left"></i> EXPIRED
+                            </span>
+                            <div style="font-size: 0.72rem; color: #991b1b; margin-top: 2px;">
+                                Ended on {{ u.expires_formatted }}
+                            </div>
+                            {% else %}
+                            <span class="badge badge-free">FREE TRIAL</span>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Paper 1 & 2 Free</div>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if not u.is_admin %}
+                                {% if u.is_paid %}
+                                <button onclick="toggleSubscription({{ u.id }}, 'deactivate')" class="btn btn-danger btn-sm">
+                                    <i class="fa-solid fa-ban"></i> Deactivate
+                                </button>
+                                {% else %}
+                                <button onclick="toggleSubscription({{ u.id }}, 'activate')" class="btn btn-primary btn-sm" style="background: var(--success);">
+                                    <i class="fa-solid fa-crown"></i> Activate PRO
+                                </button>
+                                {% endif %}
+                            {% else %}
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if not u.is_admin %}
+                            <button onclick="viewUserDetails({{ u.id }})" class="btn btn-outline btn-sm" title="View Full Account Details" style="margin-right: 4px;">
+                                <i class="fa-solid fa-eye"></i> Details
+                            </button>
+                            <button onclick="deleteUser({{ u.id }}, '{{ u.name }}')" class="btn btn-danger btn-sm" title="Delete User">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                            {% else %}
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- System Settings & Config -->
+    <div class="card">
+        <h3><i class="fa-solid fa-sliders" style="color: var(--primary); margin-right: 6px;"></i> System Portal Settings</h3>
+        <form onsubmit="saveSettings(event)" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            <div>
+                <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem;">Subscription Price (₹)</label>
+                <input type="number" id="cfgPrice" value="{{ settings.subscription_price }}" required style="width: 100%; padding: 0.65rem; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem;">UPI ID for Payments</label>
+                <input type="text" id="cfgUpiId" value="{{ settings.upi_id }}" required style="width: 100%; padding: 0.65rem; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem;">Merchant / Payee Name</label>
+                <input type="text" id="cfgUpiName" value="{{ settings.upi_name }}" required style="width: 100%; padding: 0.65rem; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem;">Announcement Banner</label>
+                <input type="text" id="cfgAnnouncement" value="{{ settings.announcement }}" style="width: 100%; padding: 0.65rem; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Candidate Support Tickets Inbox -->
+    <div class="card" style="margin-top: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="margin: 0;"><i class="fa-solid fa-headset" style="color: #0284c7; margin-right: 6px;"></i> Candidate Support Messages & Inbox</h3>
+            <span class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.85rem;">{{ tickets|length }} Messages</span>
+        </div>
+
+        {% if not tickets %}
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+            <i class="fa-solid fa-inbox" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+            <p>No support messages received yet.</p>
+        </div>
+        {% else %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Ticket ID</th>
+                        <th>Candidate User ID & UID</th>
+                        <th>Candidate Name & Contact</th>
+                        <th>Category</th>
+                        <th>Message</th>
+                        <th>Date & Time</th>
+                        <th style="text-align: center;">Status</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in tickets %}
+                    <tr>
+                        <td style="font-weight: 700; color: var(--text-muted);">#{{ t.id }}</td>
+                        <td style="font-weight: 700; color: var(--dark);">
+                            {% set target_user_id = t.user_id or t.matched_user_id %}
+                            {% if target_user_id %}
+                            User #{{ target_user_id }}<br>
+                            <span style="font-size: 0.72rem; color: var(--primary); font-weight: 700;">{{ t.user_uid or 'N/A' }}</span>
+                            {% else %}
+                            <span style="color: var(--text-muted); font-size: 0.8rem;">Guest</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 0.85rem;">
+                            <b>{{ t.name }}</b><br>
+                            <span style="color: var(--text-muted);">{{ t.email }}</span><br>
+                            <span style="color: var(--primary);">{{ t.phone or 'No Phone' }}</span>
+                        </td>
+                        <td>
+                            {% if 'Device Reset' in t.category %}
+                            <span class="badge" style="background: #fef3c7; color: #b45309; font-size: 0.75rem; font-weight: 700;"><i class="fa-solid fa-mobile-screen-button"></i> {{ t.category }}</span>
+                            {% else %}
+                            <span class="badge" style="background: #f1f5f9; color: #334155; font-size: 0.75rem;">{{ t.category }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 0.85rem; max-width: 280px; word-break: break-word;">
+                            <b>Query:</b> {{ t.message }}
+                            {% if t.admin_reply %}
+                            <div style="background: #f0fdf4; border-left: 3px solid #16a34a; padding: 6px 8px; margin-top: 6px; font-size: 0.8rem; color: #166534; border-radius: 4px;">
+                                <i class="fa-solid fa-reply"></i> <b>Admin Reply ({{ t.replied_at }}):</b><br>{{ t.admin_reply }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 0.8rem; color: var(--text-muted);">{{ t.created_at }}</td>
+                        <td style="text-align: center;">
+                            {% if t.status == 'resolved' %}
+                            <span class="badge" style="background: #d1fae5; color: #047857; font-weight: 700;">RESOLVED</span>
+                            {% else %}
+                            <span class="badge" style="background: #fef3c7; color: #b45309; font-weight: 700;">PENDING</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; min-width: 150px;">
+                            {% if t.status == 'pending' and 'Device Reset' in t.category %}
+                            <button data-id="{{ t.id }}" data-user-id="{{ t.user_id if t.user_id else 0 }}" data-name="{{ t.name }}" onclick="resetDeviceFromTicketBtn(this)" class="btn btn-primary btn-sm" style="background: #d97706; border-color: #d97706; margin-bottom: 4px; width: 100%;">
+                                <i class="fa-solid fa-mobile-screen-button"></i> Reset Device & Approve
+                            </button>
+                            {% endif %}
+
+                            <button data-id="{{ t.id }}" data-name="{{ t.name }}" data-query="{{ t.message }}" onclick="openAdminReplyModalFromBtn(this)" class="btn btn-outline btn-sm" style="margin-bottom: 4px; width: 100%; border-color: #0284c7; color: #0284c7;">
+                                <i class="fa-solid fa-reply"></i> Reply to Candidate
+                            </button>
+
+                            {% if t.status == 'pending' %}
+                            <button onclick="updateTicketStatus({{ t.id }}, 'resolved')" class="btn btn-primary btn-sm" style="background: #059669; border-color: #059669; margin-bottom: 4px; width: 100%;">
+                                <i class="fa-solid fa-check"></i> Mark Resolved
+                            </button>
+                            {% else %}
+                            <button onclick="updateTicketStatus({{ t.id }}, 'pending')" class="btn btn-outline btn-sm" style="margin-bottom: 4px; width: 100%;">
+                                Reopen
+                            </button>
+                            {% endif %}
+                            <button onclick="deleteTicket({{ t.id }})" class="btn btn-danger btn-sm" style="width: 100%;">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Admin Reply Modal Box -->
+    <div class="modal-overlay" id="adminReplyModal" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 99999;">
+        <div class="card" style="max-width: 520px; width: 92%; max-height: 90vh; overflow-y: auto; position: relative; padding: 1.75rem; background: white; border-radius: var(--radius-md); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <button type="button" onclick="closeAdminReplyModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-muted);">✕</button>
+            
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                <div style="width: 44px; height: 44px; background: #e0f2fe; color: #0284c7; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                    <i class="fa-solid fa-reply"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 1.15rem;">Reply to Support Request</h3>
+                    <span id="replyTargetCandidate" style="font-size: 0.83rem; color: var(--text-muted);"></span>
+                </div>
+            </div>
+
+            <!-- Candidate Query Preview -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0284c7; border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.83rem; color: #334155; margin-bottom: 1.15rem;">
+                <div style="font-weight: 700; color: #0369a1; margin-bottom: 3px;"><i class="fa-solid fa-circle-question"></i> Candidate Query:</div>
+                <p id="replyCandidateQuery" style="margin: 0; font-style: italic; color: #475569; word-break: break-word;"></p>
+            </div>
+
+            <form id="adminReplyForm" onsubmit="submitAdminTicketReply(event)">
+                <input type="hidden" id="replyTicketId" value="">
+                
+                <div style="margin-bottom: 0.85rem;">
+                    <label style="display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.35rem; color: var(--dark);">Quick Templates (ક્લિક કરીને સિલેક્ટ કરો):</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                        <button type="button" onclick="insertReplyTemplate('Your device reset request has been approved! You can now log in on your new device.')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 3px 8px; border-color: #f59e0b; color: #b45309;">📱 Device Reset Approved</button>
+                        <button type="button" onclick="insertReplyTemplate('Your query has been resolved. Please check your candidate portal.')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 3px 8px; border-color: #10b981; color: #047857;">✅ Query Resolved</button>
+                        <button type="button" onclick="insertReplyTemplate('Thank you for contacting support. Your PRO subscription is active and all 71 tests are unlocked.')" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 3px 8px; border-color: #0284c7; color: #0369a1;">👑 PRO Subscription Active</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.25rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.35rem;">Super Admin Reply Message / સંદેશ</label>
+                    <textarea id="replyTextarea" required rows="4" placeholder="Type your response to candidate..." style="width: 100%; padding: 0.75rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
+                </div>
+
+                <button type="submit" id="btnSubmitAdminReply" class="btn btn-primary" style="width: 100%; padding: 0.75rem; background: #0284c7; border-color: #0284c7;">
+                    <i class="fa-solid fa-paper-plane"></i> Send Reply to Candidate (Email & In-App)
+                </button>
+            </form>
+        </div>
+    </div>
+
+<!-- User Details Modal (all linked data via Payment ID / user_id) -->
+<div class="modal-overlay" id="userDetailsModal">
+    <div class="modal-box" style="max-width: 680px; text-align: left; max-height: 88vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0;"><i class="fa-solid fa-user-shield"></i> Candidate Full Details</h3>
+            <button onclick="closeUserDetails()" class="btn btn-outline btn-sm" style="padding: 0.3rem 0.6rem;">✕</button>
+        </div>
+        <div id="userDetailsBody">Loading...</div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function toggleUserSub(userId, isPaid) {
+        if (!confirm(`Are you sure you want to ${isPaid ? 'ACTIVATE' : 'DEACTIVATE'} Pro Subscription for user #${userId}?`)) return;
+        try {
+            const res = await fetch('/api/admin/toggle-subscription', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, is_paid: isPaid })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 800);
+            } else {
+                showToast(data.error || 'Failed to update', 'error');
+            }
+        } catch (err) {
+            showToast('Network error', 'error');
+        }
+    }
+
+    async function verifyPayment(paymentId, action) {
+        if (!confirm(`Are you sure you want to ${action.toUpperCase()} payment #${paymentId}?`)) return;
+        try {
+            const res = await fetch('/api/admin/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payment_id: paymentId, action: action })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 800);
+            } else {
+                showToast(data.error || 'Failed to verify', 'error');
+            }
+        } catch (err) {
+            showToast('Network error', 'error');
+        }
+    }
+
+    async function saveSettings(e) {
+        e.preventDefault();
+        const payload = {
+            subscription_price: document.getElementById('cfgPrice').value,
+            upi_id: document.getElementById('cfgUpiId').value,
+            upi_name: document.getElementById('cfgUpiName').value,
+            announcement: document.getElementById('cfgAnnouncement').value
+        };
+
+        try {
+            const res = await fetch('/api/admin/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast('Settings saved successfully!', 'success');
+            } else {
+                showToast(data.error || 'Error saving settings', 'error');
+            }
+        } catch (err) {
+            showToast('Network error', 'error');
+        }
+    }
+
+    async function resetUserDevice(userId, name) {
+        if (!confirm(`Are you sure you want to RESET bound device for "${name}" (#${userId})?\n\nThis will allow them to bind a new device on their next login.`)) return;
+        try {
+            const res = await fetch('/api/admin/reset-device', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 800);
+            } else {
+                showToast(data.error || 'Failed to reset device', 'error');
+            }
+        } catch (err) {
+            showToast('Network error', 'error');
+        }
+    }
+
+    function filterAdminUsers() {
+        const input = document.getElementById('adminSearchUser');
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById('adminUsersTable');
+        const tr = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < tr.length; i++) {
+            const td1 = tr[i].getElementsByTagName('td')[1];
+            const td2 = tr[i].getElementsByTagName('td')[2];
+            if (td1 || td2) {
+                const text = (td1 ? td1.textContent : '') + ' ' + (td2 ? td2.textContent : '');
+                if (text.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = '';
+                } else {
+                    tr[i].style.display = 'none';
+                }
+            }
+        }
+    }
+
+    async function viewUserDetails(userId) {
+        const modal = document.getElementById('userDetailsModal');
+        document.getElementById('userDetailsBody').innerHTML = 'Loading...';
+        modal.classList.add('active');
+        try {
+            const res = await fetch('/api/admin/user/' + userId);
+            const data = await res.json();
+            if (!res.ok) {
+                document.getElementById('userDetailsBody').innerHTML = '<p style="color:var(--danger);">' + (data.error || 'Failed to load') + '</p>';
+                return;
+            }
+            renderUserDetails(data);
+        } catch (err) {
+            document.getElementById('userDetailsBody').innerHTML = '<p style="color:var(--danger);">Network error</p>';
+        }
+    }
+
+    function closeUserDetails() {
+        document.getElementById('userDetailsModal').classList.remove('active');
+    }
+
+    function infoCard(label, val) {
+        return `<div style="background:#f8fafc; border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.6rem 0.75rem;">
+            <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.4px;">${label}</div>
+            <div style="font-weight:700; font-size:0.92rem; color:var(--dark); word-break:break-all;">${val}</div>
+        </div>`;
+    }
+
+    function renderUserDetails(d) {
+        const u = d.user;
+        let html = '';
+        html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.5rem;">';
+        html += infoCard('Unique ID (UID)', u.user_uid || 'N/A');
+        html += infoCard('Email', u.email || 'N/A');
+        html += infoCard('Mobile Number', u.phone || 'N/A');
+        html += infoCard('Name', u.name || 'N/A');
+        html += infoCard('Account Status', u.is_admin ? 'SUPER ADMIN' : (u.is_paid ? 'PRO (PAID)' : 'FREE TRIAL'));
+        html += infoCard('Registered On', (u.created_at || '').slice(0, 16));
+        html += '</div>';
+
+        html += '<h4 style="margin:1rem 0 0.5rem;"><i class="fa-solid fa-receipt"></i> Payments (linked by Payment ID)</h4>';
+        if (d.payments && d.payments.length) {
+            html += '<div class="table-container"><table class="table"><thead><tr><th>Pay ID</th><th>Date</th><th>Plan / Notes</th><th>Amount</th><th>Status</th><th>UTR</th></tr></thead><tbody>';
+            d.payments.forEach(p => {
+                html += `<tr><td>#${p.id}</td><td>${(p.created_at || '').slice(0, 16)}</td><td>${p.notes || '-'}</td><td>₹${p.amount}</td><td>${p.status}</td><td>${p.utr_number || '-'}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+        } else {
+            html += '<div style="color:var(--text-muted); font-size:0.85rem;">No payments on record.</div>';
+        }
+
+        html += '<h4 style="margin:1rem 0 0.5rem;"><i class="fa-solid fa-list-check"></i> Test Attempts</h4>';
+        if (d.attempts && d.attempts.length) {
+            const s = d.stats || {};
+            html += `<div style="font-size:0.85rem; margin-bottom:0.5rem;">Total Attempts: <b>${d.attempts.length}</b> &nbsp;|&nbsp; Best: <b>${s.best_score}</b> &nbsp;|&nbsp; Avg: <b>${s.avg_score}</b> &nbsp;|&nbsp; Rank: <b>${s.user_rank}</b></div>`;
+            html += '<div class="table-container"><table class="table"><thead><tr><th>Attempt</th><th>Paper</th><th>Score</th><th>Accuracy</th><th>Time</th><th>Date</th></tr></thead><tbody>';
+            d.attempts.slice(0, 20).forEach(a => {
+                html += `<tr><td>#${a.id}</td><td>${a.exam_id}</td><td>${a.net_score}</td><td>${a.accuracy}%</td><td>${a.time_taken_seconds}s</td><td>${(a.created_at || '').slice(0, 16)}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+        } else {
+            html += '<div style="color:var(--text-muted); font-size:0.85rem;">No test attempts yet.</div>';
+        }
+
+        document.getElementById('userDetailsBody').innerHTML = html;
+    }
+
+    async function deleteUser(userId, name) {
+        if (!confirm(`DELETE user #${userId} (${name})? All payments and test data will be permanently removed. This CANNOT be undone.`)) return;
+        try {
+            const res = await fetch('/api/admin/delete-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 800);
+            } else {
+                showToast(data.error || 'Failed to delete', 'error');
+            }
+        } catch (err) {
+            showToast('Network error', 'error');
+        }
+    }
+
+    async function resetDeviceFromTicket(ticketId, userId, name) {
+        if (!confirm(`Reset device binding for candidate "${name}" and approve Ticket #${ticketId}?`)) return;
+        try {
+            if (userId && userId > 0) {
+                await fetch('/api/admin/reset-device', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId })
+                });
+            }
+            await fetch(`/api/admin/support-tickets/${ticketId}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'resolved' })
+            });
+            showToast('Candidate device reset & request approved!', 'success');
+            setTimeout(() => location.reload(), 800);
+        } catch (e) {
+            showToast('Network error', 'error');
+        }
+    }
+
+    function openAdminReplyModalFromBtn(btn) {
+        if (!btn) return;
+        const ticketId = btn.getAttribute('data-id');
+        const candidateName = btn.getAttribute('data-name');
+        const queryText = btn.getAttribute('data-query');
+        openAdminReplyModal(ticketId, candidateName, queryText);
+    }
+
+    function resetDeviceFromTicketBtn(btn) {
+        if (!btn) return;
+        const ticketId = btn.getAttribute('data-id');
+        const userId = btn.getAttribute('data-user-id');
+        const name = btn.getAttribute('data-name');
+        resetDeviceFromTicket(ticketId, userId, name);
+    }
+
+    function openAdminReplyModal(ticketId, candidateName, queryText) {
+        document.getElementById('replyTicketId').value = ticketId;
+        document.getElementById('replyTargetCandidate').innerText = `Candidate: ${candidateName || 'User'} (Ticket #${ticketId})`;
+        document.getElementById('replyCandidateQuery').innerText = queryText || 'No message query provided.';
+        document.getElementById('replyTextarea').value = '';
+        
+        const modal = document.getElementById('adminReplyModal');
+        if (modal) {
+            modal.classList.add('active');
+            modal.style.setProperty('display', 'flex', 'important');
+        }
+    }
+
+    function closeAdminReplyModal() {
+        const modal = document.getElementById('adminReplyModal');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.style.setProperty('display', 'none', 'important');
+        }
+    }
+
+    function insertReplyTemplate(text) {
+        document.getElementById('replyTextarea').value = text;
+    }
+
+    async function submitAdminTicketReply(e) {
+        e.preventDefault();
+        const ticketId = document.getElementById('replyTicketId').value;
+        const reply = document.getElementById('replyTextarea').value.trim();
+        const btn = document.getElementById('btnSubmitAdminReply');
+
+        if (!reply) {
+            showToast('Reply message cannot be empty', 'error');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending Reply...';
+
+        try {
+            const res = await fetch(`/api/admin/support-tickets/${ticketId}/reply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reply })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                showToast(data.message || 'Reply sent successfully!', 'success');
+                closeAdminReplyModal();
+                setTimeout(() => location.reload(), 800);
+            } else {
+                showToast(data.error || 'Failed to send reply', 'error');
+            }
+        } catch (err) {
+            showToast('Network error, please try again', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send Reply to Candidate (Email & In-App)';
+        }
+    }
+
+    async function updateTicketStatus(ticketId, status) {
+        try {
+            const res = await fetch(`/api/admin/support-tickets/${ticketId}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 600);
+            } else {
+                showToast(data.error || 'Failed to update ticket', 'error');
+            }
+        } catch (e) {
+            showToast('Network error', 'error');
+        }
+    }
+
+    async function deleteTicket(ticketId) {
+        if (!confirm(`Are you sure you want to delete support ticket #${ticketId}?`)) return;
+        try {
+            const res = await fetch(`/api/admin/support-tickets/${ticketId}/delete`, { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 600);
+            } else {
+                showToast(data.error || 'Failed to delete ticket', 'error');
+            }
+        } catch (e) {
+            showToast('Network error', 'error');
+        }
+    }
+</script>
+{% endblock %}

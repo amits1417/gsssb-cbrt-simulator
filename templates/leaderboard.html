@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Gujarat State Leaderboard - GSSSB CCE Mock Tests{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Leaderboard Header -->
+    <div style="text-align: center; margin-bottom: 2.5rem;">
+        <span class="badge badge-pro" style="margin-bottom: 0.75rem; font-size: 0.85rem; padding: 0.4rem 0.9rem;">
+            <i class="fa-solid fa-trophy"></i> LIVE STATEWIDE RANKINGS
+        </span>
+        <h1 style="font-size: 2.2rem; margin-bottom: 0.5rem;">GSSSB CCE Aspirants Leaderboard</h1>
+        <p style="color: var(--text-muted); font-size: 1rem; max-width: 600px; margin: 0 auto;">
+            Rankings are automatically calculated based on real mock test scores, negative marking, and performance consistency across Gujarat.
+        </p>
+    </div>
+
+    <!-- Top 3 Podium Cards -->
+    {% if leaderboard and leaderboard|length >= 3 %}
+    <div class="podium-container">
+        <!-- Rank 2 (Silver) -->
+        <div class="podium-card rank-2">
+            <div class="podium-badge">🥈</div>
+            <span class="badge" style="background: #e2e8f0; color: #475569; margin-bottom: 0.5rem;">Rank #2</span>
+            <h3 style="font-size: 1.15rem; margin-bottom: 0.3rem;">{{ leaderboard[1].candidate_name }}</h3>
+            <div style="font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 0.4rem;">
+                {{ leaderboard[1].average_score }} <span style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted);">Avg</span>
+            </div>
+            <div style="font-size: 0.82rem; color: var(--text-muted);">
+                {{ leaderboard[1].tests_completed }} Tests &bull; Top: {{ leaderboard[1].highest_score }}
+            </div>
+        </div>
+
+        <!-- Rank 1 (Gold) -->
+        <div class="podium-card rank-1">
+            <div class="podium-badge">🥇</div>
+            <span class="badge" style="background: #fef08a; color: #854d0e; margin-bottom: 0.5rem;">Champion #1</span>
+            <h3 style="font-size: 1.3rem; margin-bottom: 0.3rem; color: #854d0e;">{{ leaderboard[0].candidate_name }}</h3>
+            <div style="font-size: 1.75rem; font-weight: 800; color: #854d0e; margin-bottom: 0.4rem;">
+                {{ leaderboard[0].average_score }} <span style="font-size: 0.85rem; font-weight: 500; color: #a16207;">Avg Marks</span>
+            </div>
+            <div style="font-size: 0.85rem; color: #713f12; font-weight: 600;">
+                {{ leaderboard[0].tests_completed }} Tests &bull; Peak: {{ leaderboard[0].highest_score }} &bull; {{ leaderboard[0].avg_accuracy }}% Acc
+            </div>
+        </div>
+
+        <!-- Rank 3 (Bronze) -->
+        <div class="podium-card rank-3">
+            <div class="podium-badge">🥉</div>
+            <span class="badge" style="background: #ffedd5; color: #9a3412; margin-bottom: 0.5rem;">Rank #3</span>
+            <h3 style="font-size: 1.15rem; margin-bottom: 0.3rem;">{{ leaderboard[2].candidate_name }}</h3>
+            <div style="font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 0.4rem;">
+                {{ leaderboard[2].average_score }} <span style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted);">Avg</span>
+            </div>
+            <div style="font-size: 0.82rem; color: var(--text-muted);">
+                {{ leaderboard[2].tests_completed }} Tests &bull; Top: {{ leaderboard[2].highest_score }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- User's Personal Standing Highlight -->
+    {% if user %}
+    <div style="background: linear-gradient(135deg, #1e1b4b, #312e81); color: white; border-radius: var(--radius-md); padding: 1.25rem 1.75rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: var(--shadow-md);">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="width: 48px; height: 48px; border-radius: var(--radius-full); background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #facc15;">
+                <i class="fa-solid fa-user-ninja"></i>
+            </div>
+            <div>
+                <div style="font-size: 0.85rem; color: #c7d2fe;">Your Current Standing</div>
+                <div style="font-size: 1.2rem; font-weight: 700;">{{ user.name }}</div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 2rem; align-items: center;">
+            <div style="text-align: center;">
+                <div style="font-size: 0.8rem; color: #c7d2fe;">Tests Given</div>
+                <div style="font-size: 1.2rem; font-weight: 800;" id="userTestsCount">-</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 0.8rem; color: #c7d2fe;">Your Rank</div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: #facc15;" id="userRankDisplay">-</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 0.8rem; color: #c7d2fe;">Percentile</div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: #4ade80;" id="userPercentileDisplay">-</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Full Leaderboard Table -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <h3><i class="fa-solid fa-ranking-star" style="color: var(--primary); margin-right: 6px;"></i> Statewide Candidate Ranks</h3>
+            <div>
+                <input type="text" id="searchCandidate" onkeyup="filterLeaderboard()" placeholder="Search candidate..." style="padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem; outline: none; width: 220px;">
+            </div>
+        </div>
+
+        {% if leaderboard and leaderboard|length > 0 %}
+        <div class="table-container">
+            <table class="table" id="leaderboardTable">
+                <thead>
+                    <tr>
+                        <th style="width: 80px; text-align: center;">Rank</th>
+                        <th>Candidate Name</th>
+                        <th style="text-align: center;">Tests Completed</th>
+                        <th style="text-align: center;">Average Score</th>
+                        <th style="text-align: center;">Highest Score</th>
+                        <th style="text-align: center;">Avg Accuracy</th>
+                        <th style="text-align: center;">Percentile</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in leaderboard %}
+                    <tr {% if user and user.id == item.user_id %}style="background: #eef2ff; font-weight: bold;"{% endif %}>
+                        <td style="text-align: center; font-weight: 800; font-size: 1.1rem; color: var(--dark);">
+                            {% if item.rank == 1 %}🥇 1
+                            {% elif item.rank == 2 %}🥈 2
+                            {% elif item.rank == 3 %}🥉 3
+                            {% else %}#{{ item.rank }}
+                            {% endif %}
+                        </td>
+                        <td style="font-weight: 600; color: var(--dark);">
+                            {{ item.candidate_name }}
+                            {% if user and user.id == item.user_id %}
+                            <span class="badge badge-pro" style="margin-left: 6px; font-size: 0.7rem;">YOU</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; color: var(--text-muted);">{{ item.tests_completed }}</td>
+                        <td style="text-align: center; font-weight: 800; color: var(--primary); font-size: 1.1rem;">{{ item.average_score }}</td>
+                        <td style="text-align: center; font-weight: 600; color: var(--success);">{{ item.highest_score }}</td>
+                        <td style="text-align: center; font-weight: 600;">{{ item.avg_accuracy }}%</td>
+                        <td style="text-align: center; font-weight: 700; color: #2563eb;">{{ item.percentile }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+            <i class="fa-solid fa-trophy" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+            <p style="font-size: 1.1rem; font-weight: 600; color: var(--dark); margin-bottom: 0.5rem;">Leaderboard is Open!</p>
+            <p style="font-size: 0.9rem; margin-bottom: 1.5rem;">Be the first candidate to submit a mock test and claim Rank #1 in Gujarat!</p>
+            <a href="/exam/PAPER-1" class="btn btn-primary"><i class="fa-solid fa-play"></i> Start Paper-1 Now</a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const res = await fetch('/api/leaderboard');
+            const data = await res.json();
+            if (data.user_rank_info) {
+                const u = data.user_rank_info;
+                const rEl = document.getElementById('userRankDisplay');
+                const tEl = document.getElementById('userTestsCount');
+                const pEl = document.getElementById('userPercentileDisplay');
+                if (rEl) rEl.innerText = u.user_rank ? `#${u.user_rank}` : '-';
+                if (tEl) tEl.innerText = u.total_tests || '0';
+                if (pEl) pEl.innerText = u.percentile ? `${u.percentile}%` : '-';
+            }
+        } catch (e) {}
+    });
+
+    function filterLeaderboard() {
+        const input = document.getElementById('searchCandidate');
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById('leaderboardTable');
+        if (!table) return;
+        const tr = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < tr.length; i++) {
+            const td = tr[i].getElementsByTagName('td')[1];
+            if (td) {
+                const txtValue = td.textContent || td.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = '';
+                } else {
+                    tr[i].style.display = 'none';
+                }
+            }
+        }
+    }
+</script>
+{% endblock %}

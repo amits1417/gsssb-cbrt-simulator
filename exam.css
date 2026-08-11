@@ -1,0 +1,472 @@
+/* TCS/GSSSB Online CBRT Exam Simulator Stylesheet */
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    user-select: none;
+    overflow: hidden;
+}
+
+/* Header Section */
+.exam-header {
+    background-color: #4b6584;
+    color: white;
+    padding: 10px 15px;
+    height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #3867d6;
+}
+
+.exam-title h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.timer-box {
+    background-color: #eb3b5a;
+    color: white;
+    padding: 5px 15px;
+    font-weight: bold;
+    border-radius: 4px;
+    font-size: 16px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+}
+
+/* Main Container Layout */
+.main-container {
+    display: flex;
+    height: calc(100vh - 110px); /* 100vh - header (50px) - footer (60px) */
+    background-color: white;
+}
+
+/* Left Panel: Question Display */
+.question-panel {
+    flex: 3;
+    padding: 20px;
+    overflow-y: auto;
+    border-right: 2px solid #ccc;
+    display: flex;
+    flex-direction: column;
+}
+
+.section-info {
+    background-color: #e3ecef;
+    padding: 8px 12px;
+    font-weight: bold;
+    border-left: 5px solid #20bf6b;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.question-header {
+    font-weight: bold;
+    font-size: 16px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+
+.question-content {
+    margin-bottom: 25px;
+    flex-grow: 1;
+}
+
+.question-text-eng {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    color: #2c3e50;
+}
+
+.question-img-guj {
+    margin-top: 10px;
+    display: block;
+    max-width: 100%;
+}
+
+/* Options Layout */
+.options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.option-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #f9f9f9;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.option-row:hover {
+    background-color: #f1f2f6;
+    border-color: #a5b1c2;
+}
+
+.option-row input[type="radio"] {
+    margin-right: 15px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.option-text-container {
+    display: flex;
+    align-items: center;
+}
+
+.option-num {
+    font-weight: bold;
+    margin-right: 8px;
+    color: #4b6584;
+}
+
+.option-img {
+    max-width: 100%;
+    display: block;
+}
+
+/* Right Panel: Palette and Candidate Info */
+.sidebar-panel {
+    flex: 1;
+    min-width: 320px;
+    max-width: 350px;
+    background-color: #f5f6fa;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #ddd;
+}
+
+.candidate-info-box {
+    display: flex;
+    padding: 15px;
+    background-color: #d1d8e0;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px solid #b2bec3;
+}
+
+.candidate-photo {
+    width: 65px;
+    height: 75px;
+    background-color: #a5b1c2;
+    border: 1px solid #777;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: white;
+}
+
+.candidate-details {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.candidate-details strong {
+    color: #2d3436;
+}
+
+/* Palette Grid */
+.palette-container {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.palette-title {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: #2d3436;
+}
+
+.palette-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+.palette-btn {
+    width: 45px;
+    height: 40px;
+    font-size: 14px;
+    font-weight: bold;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-radius: 4px;
+}
+
+/* Question Palette Status Colors (Matching GSSSB/TCS Portal) */
+.palette-btn.not-visited {
+    background-color: #ffffff;
+    color: #2d3436;
+    border: 1px solid #7f8c8d;
+}
+
+.palette-btn.not-answered {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M 0,2.5 L 2.5,0 L 7.5,0 L 10,2.5 L 10,7.5 L 7.5,10 L 2.5,10 L 0,7.5 Z" fill="%23eb3b5a"/></svg>');
+    background-size: 100% 100%;
+    color: white;
+    border: none;
+}
+
+.palette-btn.answered {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M 0,2.5 L 2.5,0 L 7.5,0 L 10,2.5 L 10,7.5 L 7.5,10 L 2.5,10 L 0,7.5 Z" fill="%2320bf6b"/></svg>');
+    background-size: 100% 100%;
+    color: white;
+    border: none;
+}
+
+.palette-btn.marked {
+    background-color: #8854d0;
+    color: white;
+    border-radius: 50%;
+    border: 1px solid #4b0082;
+}
+
+.palette-btn.marked-answered {
+    background-color: #8854d0;
+    color: white;
+    border-radius: 50%;
+    border: 1px solid #4b0082;
+}
+
+.palette-btn.marked-answered::after {
+    content: "";
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    background-color: #20bf6b;
+    border-radius: 50%;
+    border: 1px solid white;
+}
+
+/* Legend Box */
+.legend-box {
+    background-color: #dfe6e9;
+    padding: 12px;
+    border-top: 1px solid #b2bec3;
+    font-size: 11px;
+}
+
+.legend-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-icon {
+    width: 24px;
+    height: 22px;
+    border: 1px solid #777;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 11px;
+    border-radius: 2px;
+}
+
+.legend-icon.not-visited {
+    background-color: white;
+}
+
+.legend-icon.not-answered {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M 0,2.5 L 2.5,0 L 7.5,0 L 10,2.5 L 10,7.5 L 7.5,10 L 2.5,10 L 0,7.5 Z" fill="%23eb3b5a"/></svg>');
+    background-size: 100% 100%;
+    border: none;
+    color: white;
+}
+
+.legend-icon.answered {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M 0,2.5 L 2.5,0 L 7.5,0 L 10,2.5 L 10,7.5 L 7.5,10 L 2.5,10 L 0,7.5 Z" fill="%2320bf6b"/></svg>');
+    background-size: 100% 100%;
+    border: none;
+    color: white;
+}
+
+.legend-icon.marked {
+    background-color: #8854d0;
+    color: white;
+    border-radius: 50%;
+}
+
+.legend-icon.marked-answered {
+    background-color: #8854d0;
+    color: white;
+    border-radius: 50%;
+    position: relative;
+}
+
+.legend-icon.marked-answered::after {
+    content: "";
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    width: 6px;
+    height: 6px;
+    background-color: #20bf6b;
+    border-radius: 50%;
+    border: 1px solid white;
+}
+
+/* Footer Section */
+.exam-footer {
+    background-color: #d1d8e0;
+    height: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    border-top: 2px solid #b2bec3;
+}
+
+.footer-left {
+    display: flex;
+    gap: 15px;
+}
+
+.footer-right {
+    display: flex;
+    gap: 15px;
+}
+
+/* Button Classes */
+.btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    border: 1px solid #777;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.btn-default {
+    background-color: white;
+    color: #2d3436;
+    border-color: #7f8c8d;
+}
+
+.btn-default:hover {
+    background-color: #f1f2f6;
+}
+
+.btn-primary {
+    background-color: #2f80ed;
+    color: white;
+    border-color: #2f80ed;
+}
+
+.btn-primary:hover {
+    background-color: #1b62cc;
+}
+
+.btn-success {
+    background-color: #20bf6b;
+    color: white;
+    border-color: #20bf6b;
+}
+
+.btn-success:hover {
+    background-color: #1b9e58;
+}
+
+.btn-danger {
+    background-color: #eb3b5a;
+    color: white;
+    border-color: #eb3b5a;
+}
+
+.btn-danger:hover {
+    background-color: #d42240;
+}
+
+/* Summary Modal overlay */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.summary-modal {
+    background-color: white;
+    width: 500px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    padding: 20px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.summary-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-align: center;
+    color: #2d3436;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.summary-table td, .summary-table th {
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+.summary-table th {
+    background-color: #f5f6fa;
+    text-align: left;
+}
+
+.summary-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
