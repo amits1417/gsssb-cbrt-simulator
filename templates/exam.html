@@ -873,45 +873,48 @@
                 const card = document.createElement("div");
                 card.style.cssText = `border: 1.5px solid ${isCancelled ? '#94a3b8' : (isCorrect ? '#86efac' : (isUnattempted ? '#cbd5e1' : '#fca5a5'))}; border-radius: 8px; padding: 16px; background: ${isCancelled ? '#f8fafc' : (isCorrect ? '#f0fdf4' : (isUnattempted ? '#ffffff' : '#fef2f2'))}; box-shadow: 0 2px 6px rgba(0,0,0,0.03);`;
                 
-                // Render All Options (A, B, C, D)
-                let optionsHtml = '';
-                const opts = q.options || [];
-                if (opts.length > 0) {
-                    optionsHtml = '<div style="display: flex; flex-direction: column; gap: 8px; margin: 12px 0;">';
-                    opts.forEach((opt, oIdx) => {
-                        const optNum = oIdx + 1;
-                        const optLetter = String.fromCharCode(64 + optNum);
-                        const isThisCorrect = (!isCancelled && cAns === optNum);
-                        const isThisChosen = (uAns === optNum);
+                // Render All 4 Options (A, B, C, D)
+                let optionsHtml = '<div style="display: flex; flex-direction: column; gap: 8px; margin: 12px 0;">';
+                const opts = (q.options && q.options.length > 0) ? q.options : [
+                    { index: 1, text: '', path: '' },
+                    { index: 2, text: '', path: '' },
+                    { index: 3, text: '', path: '' },
+                    { index: 4, text: '', path: '' }
+                ];
 
-                        let optBorder = '#cbd5e1';
-                        let optBg = '#ffffff';
-                        let badgeHtml = '';
+                opts.forEach((opt, oIdx) => {
+                    const optNum = oIdx + 1;
+                    const optLetter = String.fromCharCode(64 + optNum);
+                    const isThisCorrect = (!isCancelled && cAns === optNum);
+                    const isThisChosen = (uAns === optNum);
 
-                        if (isThisCorrect && isThisChosen) {
-                            optBorder = '#16a34a';
-                            optBg = '#dcfce7';
-                            badgeHtml = `<span style="background: #16a34a; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-left: auto; white-space: nowrap;"><i class="fa-solid fa-circle-check"></i> Correct & Selected</span>`;
-                        } else if (isThisCorrect) {
-                            optBorder = '#16a34a';
-                            optBg = '#f0fdf4';
-                            badgeHtml = `<span style="background: #16a34a; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-left: auto; white-space: nowrap;"><i class="fa-solid fa-check"></i> Correct Answer</span>`;
-                        } else if (isThisChosen) {
-                            optBorder = '#dc2626';
-                            optBg = '#fee2e2';
-                            badgeHtml = `<span style="background: #dc2626; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-left: auto; white-space: nowrap;"><i class="fa-solid fa-xmark"></i> Your Selection (Wrong)</span>`;
-                        }
+                    let optBorder = '#cbd5e1';
+                    let optBg = '#ffffff';
+                    let badgeHtml = '';
 
-                        optionsHtml += `
-                            <div style="display: flex; align-items: center; gap: 10px; border: 1.5px solid ${optBorder}; background: ${optBg}; padding: 10px 14px; border-radius: 6px;">
-                                <strong style="font-size: 14px; color: #1e293b; min-width: 24px;">${optLetter}.</strong>
-                                ${opt.path ? `<img src="/${opt.path}" style="max-height: 48px; max-width: 82%; vertical-align: middle;">` : `<span style="font-size: 14px; color: #1e293b;">${opt.text || ('Option ' + optLetter)}</span>`}
-                                ${badgeHtml}
-                            </div>
-                        `;
-                    });
-                    optionsHtml += '</div>';
-                }
+                    if (isThisCorrect && isThisChosen) {
+                        optBorder = '#16a34a';
+                        optBg = '#dcfce7';
+                        badgeHtml = `<span style="background: #16a34a; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; margin-left: auto; white-space: nowrap;"><i class="fa-solid fa-circle-check"></i> Correct & Selected</span>`;
+                    } else if (isThisCorrect) {
+                        optBorder = '#16a34a';
+                        optBg = '#f0fdf4';
+                        badgeHtml = `<span style="background: #16a34a; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; margin-left: auto; white-space: nowrap;"><i class="fa-solid fa-check"></i> Correct Answer</span>`;
+                    } else if (isThisChosen) {
+                        optBorder = '#dc2626';
+                        optBg = '#fee2e2';
+                        badgeHtml = `<span style="background: #dc2626; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; margin-left: auto; white-space: nowrap;"><i class="fa-solid fa-xmark"></i> Your Selection (Wrong)</span>`;
+                    }
+
+                    optionsHtml += `
+                        <div style="display: flex; align-items: center; gap: 10px; border: 1.5px solid ${optBorder}; background: ${optBg}; padding: 10px 14px; border-radius: 6px;">
+                            <strong style="font-size: 14px; color: #1e293b; min-width: 24px;">${optLetter}.</strong>
+                            ${opt.path ? `<img src="/${opt.path}" style="max-height: 48px; max-width: 82%; vertical-align: middle;">` : `<span style="font-size: 14px; color: #1e293b;">${opt.text || ('Option ' + optLetter)}</span>`}
+                            ${badgeHtml}
+                        </div>
+                    `;
+                });
+                optionsHtml += '</div>';
 
                 let statusBadgeText = '';
                 if (isCancelled) {
@@ -924,12 +927,14 @@
                     statusBadgeText = `<span style="color: #b91c1c; background: #fee2e2; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 700;"><i class="fa-solid fa-circle-xmark"></i> Incorrect (-0.25 Mark)</span>`;
                 }
 
+                let cleanPrompt = (q.english_prompt || '').replace(/^Yes\s*/i, '').trim();
+
                 card.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 6px;">
                         <strong style="font-size: 15px; color: #1e293b;">Question No. ${q.number}</strong>
                         ${statusBadgeText}
                     </div>
-                    ${(q.english_prompt && q.english_prompt.trim() !== 'Yes') ? `<div style="font-size: 14.5px; margin-bottom: 8px; line-height: 1.5; color: #1e293b; white-space: pre-line;">${q.english_prompt}</div>` : ''}
+                    ${cleanPrompt ? `<div style="font-size: 14.5px; margin-bottom: 8px; line-height: 1.5; color: #1e293b; white-space: pre-line;">${cleanPrompt}</div>` : ''}
                     ${q.gujarati_prompt_path ? `<img src="/${q.gujarati_prompt_path}" style="max-width: 100%; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e2e8f0; background: white;">` : ''}
                     ${optionsHtml}
                     ${uAns === 5 ? `<div style="padding: 8px 12px; background: #f1f5f9; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; color: #475569; margin: 8px 0;"><strong>Selected Option E</strong> (Not Attempted - 0.00 Marks)</div>` : ''}
