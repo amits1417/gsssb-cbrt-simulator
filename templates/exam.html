@@ -33,20 +33,30 @@
     <!-- EXAM HEADER -->
     <header class="exam-header">
         <div class="exam-title">
-            <h2 id="headerSubjectTitle">GSSSB Combined Competitive Exam (Class-III) - {{ paper_id }}</h2>
+            <h2 id="headerSubjectTitle">GSSSB CBRT - {{ paper_id }}</h2>
         </div>
         <div class="header-right">
+            <!-- Mobile Question Palette Toggle Button -->
+            <button class="palette-toggle-btn" id="btnTogglePalette" title="Open Question Palette">
+                <i class="fa-solid fa-table-cells"></i> <span class="hide-xs">Questions</span> (<span id="paletteAnsweredBadge">0</span>/100)
+            </button>
             <div class="timer-box" id="timer">
-                <i class="fa-regular fa-clock"></i> <span id="timerText">Time Left: 60:00</span>
+                <i class="fa-regular fa-clock"></i> <span id="timerText">60:00</span>
             </div>
         </div>
     </header>
 
+    <!-- MOBILE BACKDROP FOR PALETTE DRAWER -->
+    <div class="palette-backdrop" id="paletteBackdrop"></div>
+
     <!-- MAIN EXAM CONTAINER -->
     <div class="main-container">
-        <!-- Left: Question Display -->
+        <!-- Left: Question Display (Takes 100% on Mobile) -->
         <div class="question-panel">
-            <div class="section-info">SECTION: Combined Competitive Exam (Group A & B) &bull; {{ paper_id }}</div>
+            <div class="section-info">
+                <span>SECTION: Combined Competitive Exam &bull; {{ paper_id }}</span>
+                <span class="q-nav-info hide-desktop">Q <strong id="qCurrentNumBadge">1</strong> of 100</span>
+            </div>
             <div class="question-header">
                 <span id="qNumberTitle" style="font-weight: 700; font-size: 16px; color: #2c3e50;">Question No. 1</span>
                 <span style="font-size: 13px; color: #7f8c8d;">Marks: Correct +1.0 | Wrong -0.33</span>
@@ -103,21 +113,29 @@
             </div>
         </div>
 
-        <!-- Right: Candidate Profile and Palette -->
-        <div class="sidebar-panel">
+        <!-- Right: Candidate Profile and Palette (Slide-out Drawer on Mobile) -->
+        <div class="sidebar-panel" id="sidebarPanel">
             <div class="candidate-info-box">
                 <div class="candidate-photo">
-                    <i class="fa-solid fa-user" style="font-size: 32px; color: #718096;"></i>
+                    <i class="fa-solid fa-user" style="font-size: 28px; color: #718096;"></i>
                 </div>
-                <div class="candidate-details">
-                    Candidate Name: <strong>{{ user.name if user else 'Candidate' }}</strong><br>
+                <div class="candidate-details" style="flex: 1;">
+                    Candidate: <strong>{{ user.name if user else 'Candidate' }}</strong><br>
                     Exam Code: <strong>GSSSB-212</strong><br>
-                    System Number: <strong>C001</strong>
+                    System: <strong>C001</strong>
                 </div>
+                <button class="close-palette-btn hide-desktop" id="btnClosePalette" title="Close Palette">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
             <div class="palette-container">
-                <div class="palette-title">Question Palette:</div>
+                <div class="palette-header-row">
+                    <div class="palette-title">Question Palette:</div>
+                    <div class="palette-quick-stats">
+                        <span class="badge-answered-count" id="statBadgeAnswered">0 Answered</span>
+                    </div>
+                </div>
                 <div class="palette-grid" id="paletteGrid">
                     <!-- 100 Question Palette Buttons generated dynamically -->
                 </div>
@@ -152,17 +170,29 @@
         </div>
     </div>
 
-    <!-- EXAM FOOTER -->
+    <!-- EXAM FOOTER / ACTION BAR -->
     <footer class="exam-footer">
-        <div class="footer-left">
-            <button class="btn-tcs btn-default" id="btnMarkNext"><i class="fa-regular fa-bookmark"></i> Mark for Review & Next</button>
-            <button class="btn-tcs btn-default" id="btnClear"><i class="fa-solid fa-eraser"></i> Clear Response</button>
+        <div class="footer-row-mobile footer-left">
+            <button class="btn-tcs btn-tcs-purple" id="btnMarkNext" title="Mark for review and proceed">
+                <i class="fa-regular fa-bookmark"></i> Mark for Review & Next
+            </button>
+            <button class="btn-tcs btn-default" id="btnClear" title="Clear selected option">
+                <i class="fa-solid fa-eraser"></i> Clear Response
+            </button>
         </div>
-        <div class="footer-right">
-            <button class="btn-tcs btn-tcs-primary" id="btnSaveNext"><i class="fa-solid fa-floppy-disk"></i> Save & Next</button>
-            <button class="btn-tcs btn-tcs-success" id="btnSubmit"><i class="fa-solid fa-paper-plane"></i> Submit Exam</button>
+        <div class="footer-row-mobile footer-right">
+            <button class="btn-tcs btn-default btn-prev" id="btnPrev" title="Go to previous question">
+                <i class="fa-solid fa-chevron-left"></i> Previous
+            </button>
+            <button class="btn-tcs btn-tcs-primary" id="btnSaveNext" title="Save answer and proceed">
+                <i class="fa-solid fa-floppy-disk"></i> Save & Next
+            </button>
+            <button class="btn-tcs btn-tcs-success" id="btnSubmit" title="Submit completed exam">
+                <i class="fa-solid fa-paper-plane"></i> Submit Exam
+            </button>
         </div>
     </footer>
+
 
     <!-- SUBMIT CONFIRMATION MODAL -->
     <div class="modal-overlay-cbrt" id="submitModal">
@@ -326,6 +356,32 @@
             }
         }
 
+        function updatePaletteStats() {
+            let answered = 0;
+            statuses.forEach(s => {
+                if (s === "answered" || s === "marked-answered") answered++;
+            });
+            const badge = document.getElementById("paletteAnsweredBadge");
+            if (badge) badge.innerText = answered;
+            const statBadge = document.getElementById("statBadgeAnswered");
+            if (statBadge) statBadge.innerText = `${answered} Answered`;
+        }
+
+        function togglePaletteDrawer(show) {
+            const sidebar = document.getElementById("sidebarPanel");
+            const backdrop = document.getElementById("paletteBackdrop");
+            if (show === undefined) {
+                const isOpen = sidebar.classList.toggle("open");
+                backdrop.classList.toggle("active", isOpen);
+            } else if (show) {
+                sidebar.classList.add("open");
+                backdrop.classList.add("active");
+            } else {
+                sidebar.classList.remove("open");
+                backdrop.classList.remove("active");
+            }
+        }
+
         function renderQuestion(index) {
             if (index < 0 || index >= questions.length) return;
             currentIndex = index;
@@ -343,6 +399,9 @@
 
             const q = questions[index];
             document.getElementById("qNumberTitle").innerText = `Question No. ${index + 1}`;
+            const numBadge = document.getElementById("qCurrentNumBadge");
+            if (numBadge) numBadge.innerText = index + 1;
+
             document.getElementById("qTextEng").innerText = q.english_prompt || "";
 
             // Gujarati Prompt Image
@@ -385,6 +444,13 @@
                 const radio = document.querySelector(`input[name="examOption"][value="${savedAns}"]`);
                 if (radio) radio.checked = true;
             }
+
+            // Update prev button state
+            const prevBtn = document.getElementById("btnPrev");
+            if (prevBtn) {
+                prevBtn.disabled = (currentIndex === 0);
+                prevBtn.style.opacity = (currentIndex === 0) ? "0.5" : "1";
+            }
         }
 
         function updatePaletteBtn(index) {
@@ -394,6 +460,7 @@
             if (index === currentIndex) {
                 btn.classList.add("active-question");
             }
+            updatePaletteStats();
         }
 
         function saveAndNext() {
@@ -403,13 +470,20 @@
             }
         }
 
+        function previousQuestion() {
+            saveCurrentAnswer();
+            if (currentIndex > 0) {
+                renderQuestion(currentIndex - 1);
+            }
+        }
+
         function saveCurrentAnswer() {
             const selected = document.querySelector('input[name="examOption"]:checked');
             if (selected) {
                 answers[currentIndex] = parseInt(selected.value);
                 statuses[currentIndex] = "answered";
             } else {
-                if (statuses[currentIndex] !== "marked") {
+                if (statuses[currentIndex] !== "marked" && statuses[currentIndex] !== "marked-answered") {
                     statuses[currentIndex] = "not-answered";
                 }
             }
@@ -440,14 +514,30 @@
         function navigateToQuestion(index) {
             saveCurrentAnswer();
             renderQuestion(index);
+            togglePaletteDrawer(false); // Auto-close on mobile
         }
 
         function initEventListeners() {
             document.getElementById("btnClear").addEventListener("click", clearResponse);
             document.getElementById("btnMarkNext").addEventListener("click", markForReviewAndNext);
             document.getElementById("btnSaveNext").addEventListener("click", saveAndNext);
+            const btnPrev = document.getElementById("btnPrev");
+            if (btnPrev) btnPrev.addEventListener("click", previousQuestion);
+
             document.getElementById("btnSubmit").addEventListener("click", showSubmitModal);
             document.getElementById("modalClose").addEventListener("click", closeSubmitModal);
+            document.getElementById("modalConfirmSubmit").addEventListener("click", submitExam);
+
+            // Palette Mobile Drawer toggles
+            const btnToggle = document.getElementById("btnTogglePalette");
+            if (btnToggle) btnToggle.addEventListener("click", () => togglePaletteDrawer());
+
+            const btnClose = document.getElementById("btnClosePalette");
+            if (btnClose) btnClose.addEventListener("click", () => togglePaletteDrawer(false));
+
+            const backdrop = document.getElementById("paletteBackdrop");
+            if (backdrop) backdrop.addEventListener("click", () => togglePaletteDrawer(false));
+
             document.getElementById("modalConfirmSubmit").addEventListener("click", submitExam);
 
             // Row click selects radio
