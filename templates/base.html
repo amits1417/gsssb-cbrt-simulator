@@ -26,16 +26,26 @@
 
             <!-- Nav Menu Wrapper (collapses on mobile) -->
             <div class="nav-menu-wrapper" id="navMenuWrapper">
+                <div class="mobile-nav-header">
+                    <div class="nav-brand" style="font-size: 1rem;">
+                        <span class="nav-logo-badge"><i class="fa-solid fa-graduation-cap"></i> GSSSB</span>
+                        <span>CCE Menu</span>
+                    </div>
+                    <button type="button" class="mobile-nav-close" id="mobileNavClose" aria-label="Close menu">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
                 <ul class="nav-links">
                     <li><a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}"><i class="fa-solid fa-layer-group"></i> Mock Tests</a></li>
                     <li><a href="/leaderboard" class="nav-link {% if request.path == '/leaderboard' %}active{% endif %}"><i class="fa-solid fa-trophy"></i> Leaderboard</a></li>
                     <li><a href="/pricing" class="nav-link {% if request.path in ['/pricing', '/payment'] %}active{% endif %}"><i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Pricing & Plans</a></li>
+                    {% if user %}
                     <li>
-                        <button type="button" onclick="openGlobalSupportModal('msg')" class="nav-link nav-link-btn">
+                        <button type="button" onclick="openGlobalSupportModal('msg')" class="nav-link nav-link-btn" style="background: none; border: none; cursor: pointer; color: inherit; font: inherit; padding: 0.5rem 0.8rem; display: flex; align-items: center; gap: 6px; width: 100%;">
                             <i class="fa-solid fa-headset" style="color: #0284c7;"></i> Support / સપોર્ટ
                         </button>
                     </li>
-                    {% if user %}
                     <li><a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
                     {% if user.is_admin %}
                     <li><a href="/admin" class="nav-link {% if request.path == '/admin' %}active{% endif %}"><i class="fa-solid fa-shield-halved"></i> Admin</a></li>
@@ -66,6 +76,7 @@
         </div>
     </nav>
     <div class="mobile-nav-backdrop" id="mobileNavBackdrop"></div>
+
 
 
     <!-- Main Page Content Block -->
@@ -195,10 +206,11 @@
             <div style="display: flex; gap: 1.5rem; font-size: 0.85rem;">
                 <a href="/pricing">Pricing & Subscription</a>
                 <a href="/leaderboard">Rankings</a>
+                {% if user %}
                 <button type="button" onclick="openGlobalSupportModal('msg')" style="background: none; border: none; color: inherit; cursor: pointer; font: inherit; text-decoration: underline;">Help & Support (સપોર્ટ)</button>
+                {% endif %}
             </div>
         </div>
-    </footer>
     </footer>
 
     <!-- Toast Notification Container -->
@@ -325,7 +337,15 @@
             }
         }
 
+        const isUserLoggedIn = {% if user %}true{% else %}false{% endif %};
+
         function openGlobalSupportModal(tab = 'msg', defaultCategory, prefillMessage) {
+            if (!isUserLoggedIn) {
+                showToast('Please sign in to contact Support / સપોર્ટ માટે કૃપા કરીને લોગીન કરો.', 'error');
+                setTimeout(() => { window.location.href = '/auth'; }, 1000);
+                return;
+            }
+
             const modal = document.getElementById('globalSupportModal');
             if (modal) {
                 modal.classList.add('active');
@@ -435,6 +455,13 @@
             const toggleBtn = document.getElementById('mobileNavToggle');
             const navWrapper = document.getElementById('navMenuWrapper');
             const backdrop = document.getElementById('mobileNavBackdrop');
+            const closeBtn = document.getElementById('mobileNavClose');
+
+            function closeMobileNav() {
+                if (navWrapper) navWrapper.classList.remove('open');
+                if (toggleBtn) toggleBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
+                if (backdrop) backdrop.classList.remove('active');
+            }
 
             if (toggleBtn && navWrapper) {
                 toggleBtn.addEventListener('click', () => {
@@ -444,13 +471,8 @@
                 });
             }
 
-            if (backdrop) {
-                backdrop.addEventListener('click', () => {
-                    if (navWrapper) navWrapper.classList.remove('open');
-                    if (toggleBtn) toggleBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
-                    backdrop.classList.remove('active');
-                });
-            }
+            if (closeBtn) closeBtn.addEventListener('click', closeMobileNav);
+            if (backdrop) backdrop.addEventListener('click', closeMobileNav);
         });
     </script>
     {% block extra_scripts %}{% endblock %}
