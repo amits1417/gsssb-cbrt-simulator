@@ -30,6 +30,209 @@
 </head>
 <body>
 
+    <!-- ========================================================= -->
+    <!-- 1. OFFICIAL INSTRUCTION & GUIDELINES SCREEN (BILINGUAL)   -->
+    <!-- ========================================================= -->
+    <div id="instructionScreen">
+        <!-- Header -->
+        <header class="instruction-header">
+            <div class="inst-header-left">
+                <div class="inst-logo-badge"><i class="fa-solid fa-graduation-cap"></i> GSSSB CBRT</div>
+                <div>
+                    <h2 style="font-size: 16px; margin: 0; color: #1e293b;">Combined Competitive Examination (Class-III)</h2>
+                    <span style="font-size: 12px; color: #64748b;">Advt. No: GSSSB/202324/212 &bull; <strong>{{ paper_id }}</strong></span>
+                </div>
+            </div>
+            
+            <div class="inst-candidate-info">
+                <div class="inst-candidate-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div style="font-size: 12.5px;">
+                    <div style="font-weight: 700; color: #1e293b;">{{ user.name if user else 'Candidate / ઉમેદવાર' }}</div>
+                    <div style="color: #64748b;">Paper: {{ paper_id }} &bull; System: C001</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Instruction Body -->
+        <div class="instruction-body">
+            <div class="instruction-content-box">
+                <!-- Exam Overview Cards -->
+                <div class="inst-summary-grid">
+                    <div class="inst-summary-card">
+                        <div class="inst-card-icon" style="background: #e0e7ff; color: #4338ca;"><i class="fa-solid fa-file-lines"></i></div>
+                        <div>
+                            <div class="inst-card-label">Total Questions / કુલ પ્રશ્નો</div>
+                            <div class="inst-card-val">100 MCQs</div>
+                        </div>
+                    </div>
+                    <div class="inst-summary-card">
+                        <div class="inst-card-icon" style="background: #fee2e2; color: #dc2626;"><i class="fa-regular fa-clock"></i></div>
+                        <div>
+                            <div class="inst-card-label">Total Duration / કુલ સમય</div>
+                            <div class="inst-card-val">60 Mins (1 Hour)</div>
+                        </div>
+                    </div>
+                    <div class="inst-summary-card">
+                        <div class="inst-card-icon" style="background: #dcfce7; color: #15803d;"><i class="fa-solid fa-award"></i></div>
+                        <div>
+                            <div class="inst-card-label">Maximum Marks / કુલ ગુણ</div>
+                            <div class="inst-card-val">100 Marks</div>
+                        </div>
+                    </div>
+                    <div class="inst-summary-card">
+                        <div class="inst-card-icon" style="background: #fef3c7; color: #b45309;"><i class="fa-solid fa-scale-balanced"></i></div>
+                        <div>
+                            <div class="inst-card-label">Marking Scheme / ગુણ પદ્ધતિ</div>
+                            <div class="inst-card-val" style="font-size: 12.5px;">+1.0 Correct | -0.25 Wrong</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Language Toggle for Instructions -->
+                <div class="inst-lang-tabs">
+                    <span style="font-weight: 700; font-size: 13px; color: #1e3a8a;"><i class="fa-solid fa-language"></i> View Instructions In / સૂચનાઓની ભાષા:</span>
+                    <div class="inst-lang-buttons">
+                        <button type="button" class="inst-lang-btn active" id="btnLangGuj" onclick="switchInstLang('guj')">ગુજરાતી (Gujarati)</button>
+                        <button type="button" class="inst-lang-btn" id="btnLangEng" onclick="switchInstLang('eng')">English</button>
+                        <button type="button" class="inst-lang-btn" id="btnLangBoth" onclick="switchInstLang('both')">Bilingual (બંને)</button>
+                    </div>
+                </div>
+
+                <!-- Instructions Text Container -->
+                <div class="inst-text-area" id="instTextArea">
+                    <!-- Gujarati Instructions Content -->
+                    <div id="instSecGuj" class="inst-lang-sec">
+                        <h3 class="inst-sec-title"><i class="fa-solid fa-circle-info" style="color: #3867d6;"></i> ૧. સામાન્ય સૂચનાઓ (General Instructions)</h3>
+                        <ol class="inst-list">
+                            <li>આ મોક ટેસ્ટ <strong>GSSSB CCE (જાહેરાત ક્રમાંક: GSSSB/202324/212)</strong> ના ઓરિજિનલ પેપર અને TCS CBRT ઓનલાઇન પરીક્ષા પદ્ધતિ અનુસાર તૈયાર કરેલ છે.</li>
+                            <li>પરીક્ષા માટે કુલ <strong>૬૦ મિનિટ (૧ કલાક)</strong> નો સમય ફાળવવામાં આવેલ છે.</li>
+                            <li>સ્ક્રીનના ઉપરના જમણા ખૂણે કાઉન્ટડાઉન ટાઈમર ચાલશે. સમય પૂરો થતાં જ પરીક્ષા <strong>આપમેળે સબમિટ (Auto-Submit)</strong> થઈ જશે.</li>
+                            <li><strong>ગુણ પદ્ધતિ (Marking Scheme):</strong>
+                                <ul style="margin-top: 4px; padding-left: 20px;">
+                                    <li>દરેક સાચા ઉત્તર માટે <strong>+૧.૦૦ ગુણ (+1.0 Mark)</strong> મળશે.</li>
+                                    <li>દરેક ખોટા ઉત્તર માટે <strong>-૦.૨૫ ગુણ (-0.25 Negative Mark)</strong> કપાશે.</li>
+                                    <li>Option E અથવા અન-અટેમ્પ્ટ પ્રશ્ન માટે <strong>૦.૦૦ ગુણ</strong> રહેશે.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Option E નો ઉપયોગ (Not Attempted):</strong> જો તમે કોઈ પ્રશ્નનો ઉત્તર આપવા માંગતા ન હોવ, તો <strong>-૦.૨૫ નેગેટિવ માર્કિંગથી બચવા માટે Option E</strong> પસંદ કરો.</li>
+                        </ol>
+
+                        <h3 class="inst-sec-title"><i class="fa-solid fa-shapes" style="color: #3867d6;"></i> ૨. પ્રશ્ન પેલેટ સિમ્બોલ્સ અને સ્ટેટસ (Palette Symbols)</h3>
+                        <div class="inst-symbols-grid">
+                            <div class="inst-symbol-card">
+                                <span class="palette-btn not-visited" style="width: 32px; height: 32px; display: inline-flex;">1</span>
+                                <div><strong>Not Visited (સફેદ ચોરસ):</strong> તમે હજુ સુધી આ પ્રશ્ન જોયો નથી.</div>
+                            </div>
+                            <div class="inst-symbol-card">
+                                <span class="palette-btn not-answered" style="width: 32px; height: 32px; display: inline-flex;">2</span>
+                                <div><strong>Not Answered (લાલ એરો):</strong> તમે પ્રશ્ન જોયો છે પણ જવાબ આપ્યો નથી.</div>
+                            </div>
+                            <div class="inst-symbol-card">
+                                <span class="palette-btn answered" style="width: 32px; height: 32px; display: inline-flex;">3</span>
+                                <div><strong>Answered (લીલો એરો):</strong> તમે પ્રશ્નનો જવાબ સેવ કર્યો છે.</div>
+                            </div>
+                            <div class="inst-symbol-card">
+                                <span class="palette-btn marked" style="width: 32px; height: 32px; display: inline-flex;">4</span>
+                                <div><strong>Marked for Review (જાંબલી વર્તુળ):</strong> ઉત્તર આપ્યા વગર સમીક્ષા માટે ચિહ્નિત કરેલ છે.</div>
+                            </div>
+                            <div class="inst-symbol-card">
+                                <span class="palette-btn marked-answered" style="width: 32px; height: 32px; display: inline-flex;">5</span>
+                                <div><strong>Answered & Marked (જાંબલી + લીલો ડોટ):</strong> ઉત્તર આપી સમીક્ષા માટે રાખેલ છે. (આનું મૂલ્યાંકન થશે).</div>
+                            </div>
+                        </div>
+
+                        <h3 class="inst-sec-title"><i class="fa-solid fa-sliders" style="color: #3867d6;"></i> ૩. નેવિગેશન અને બટન્સનો ઉપયોગ</h3>
+                        <ul class="inst-list">
+                            <li><strong>Save & Next:</strong> પસંદ કરેલ વિકલ્પ સેવ કરીને આગળના પ્રશ્ન પર જવા માટે.</li>
+                            <li><strong>Mark for Review & Next:</strong> પ્રશ્નને રીવ્યુ માટે રાખી આગળ જવા માટે.</li>
+                            <li><strong>Clear Response:</strong> પસંદ કરેલ રેડિયો ઓપ્શન દૂર (Deselect) કરવા માટે.</li>
+                            <li><strong>Previous:</strong> આગળના પ્રશ્ન પર પાછા જવા માટે.</li>
+                            <li><strong>Submit Exam:</strong> સંપૂર્ણ ૧૦૦ પ્રશ્નોની ચકાસણી બાદ ટેસ્ટ સબમિટ કરવા માટે.</li>
+                        </ul>
+                    </div>
+
+                    <!-- English Instructions Content -->
+                    <div id="instSecEng" class="inst-lang-sec" style="display: none;">
+                        <h3 class="inst-sec-title"><i class="fa-solid fa-circle-info" style="color: #3867d6;"></i> 1. General Instructions (English)</h3>
+                        <ol class="inst-list">
+                            <li>Total duration of the examination is <strong>60 minutes (1 hour)</strong> comprising <strong>100 Multiple Choice Questions</strong>.</li>
+                            <li>The clock will be synchronized with the server. A countdown timer at the top right displays the remaining time.</li>
+                            <li>When the timer reaches zero, the examination will end automatically and submit.</li>
+                            <li><strong>Marking Scheme:</strong>
+                                <ul style="margin-top: 4px; padding-left: 20px;">
+                                    <li>Each correct answer carries <strong>+1.00 mark</strong>.</li>
+                                    <li>Each incorrect answer carries a negative marking of <strong>-0.25 mark</strong>.</li>
+                                    <li>Option E (Not Attempted) or unattempted questions carry <strong>0.00 marks</strong>.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Option E Usage:</strong> If you do not wish to attempt a question, select <strong>Option E</strong> to avoid the negative penalty.</li>
+                        </ol>
+
+                        <h3 class="inst-sec-title"><i class="fa-solid fa-shapes" style="color: #3867d6;"></i> 2. Question Palette Legend & Statuses</h3>
+                        <div class="inst-symbols-grid">
+                            <div class="inst-symbol-card">
+                                <span class="palette-btn not-visited" style="width: 32px; height: 32px; display: inline-flex;">1</span>
+                                <div><strong>Not Visited (White):</strong> You have not visited this question yet.</div>
+                            </div>
+                            <div class="inst-symbol-card">
+                                <span class="palette-btn not-answered" style="width: 32px; height: 32px; display: inline-flex;">2</span>
+                                <div><strong>Not Answered (Red):</strong> You have visited but not answered this question.</div>
+                            </div>
+                            <div class="inst-symbol-card">
+                                <span class="palette-btn answered" style="width: 32px; height: 32px; display: inline-flex;">3</span>
+                                <div><strong>Answered (Green):</strong> You have answered this question.</div>
+                            </div>
+                            <div class="inst-symbol-card">
+                                <span class="palette-btn marked" style="width: 32px; height: 32px; display: inline-flex;">4</span>
+                                <div><strong>Marked for Review (Purple):</strong> You have marked this for review without answering.</div>
+                            </div>
+                            <div class="inst-symbol-card">
+                                <span class="palette-btn marked-answered" style="width: 32px; height: 32px; display: inline-flex;">5</span>
+                                <div><strong>Answered & Marked (Purple with green dot):</strong> Answered and marked for review (will be evaluated).</div>
+                            </div>
+                        </div>
+
+                        <h3 class="inst-sec-title"><i class="fa-solid fa-sliders" style="color: #3867d6;"></i> 3. Navigating and Answering</h3>
+                        <ul class="inst-list">
+                            <li><strong>Save & Next:</strong> Saves selected choice and loads next question.</li>
+                            <li><strong>Mark for Review & Next:</strong> Flags question for review and proceeds forward.</li>
+                            <li><strong>Clear Response:</strong> Unselects chosen answer radio button.</li>
+                            <li><strong>Previous:</strong> Moves back to the preceding question.</li>
+                            <li><strong>Submit Exam:</strong> Opens summary review modal for final test submission.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Declaration & Confirmation Checkbox Area -->
+                <div class="inst-declaration-box">
+                    <label class="inst-checkbox-label">
+                        <input type="checkbox" id="chkAgreeInstructions" onchange="toggleStartExamBtn(this.checked)">
+                        <span>
+                            <strong>I have read and understood all the instructions above.</strong> I declare that all hardware/system allocated to me are working properly. I agree to abide by all the examination rules and guidelines.<br>
+                            <span style="color: #1e3a8a; font-size: 13px;">(મેં ઉપરોક્ત તમામ સૂચનાઓ ધ્યાનપૂર્વક વાંચી અને સમજી લીધી છે. હું પરીક્ષાના તમામ નિયમોનું પાલન કરવા સંમત છું.)</span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Action Button Footer -->
+                <div class="inst-footer-actions">
+                    <a href="/" class="btn-tcs btn-default" style="padding: 10px 20px; font-size: 14px; text-decoration: none;">
+                        <i class="fa-solid fa-arrow-left"></i> Back to Portal (પાછા જાઓ)
+                    </a>
+                    <button type="button" id="btnStartExam" onclick="beginActualExam()" class="btn-start-exam" disabled>
+                        <i class="fa-solid fa-play"></i> I am ready to begin / પરીક્ષા શરૂ કરો
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- 2. ACTUAL EXAM INTERFACE SCREEN (HIDDEN UNTIL READY)      -->
+    <!-- ========================================================= -->
+
     <!-- EXAM HEADER -->
     <header class="exam-header">
         <div class="exam-title">
@@ -299,12 +502,54 @@
         let timeTaken = 0;
         let timerInterval = null;
 
+        let isExamStarted = false;
+
         document.addEventListener("DOMContentLoaded", async () => {
             initEventListeners();
             await loadExamQuestions();
+        });
+
+        function switchInstLang(lang) {
+            document.querySelectorAll(".inst-lang-btn").forEach(b => b.classList.remove("active"));
+            const secGuj = document.getElementById("instSecGuj");
+            const secEng = document.getElementById("instSecEng");
+
+            if (lang === 'guj') {
+                document.getElementById("btnLangGuj").classList.add("active");
+                secGuj.style.display = "block";
+                secEng.style.display = "none";
+            } else if (lang === 'eng') {
+                document.getElementById("btnLangEng").classList.add("active");
+                secGuj.style.display = "none";
+                secEng.style.display = "block";
+            } else {
+                document.getElementById("btnLangBoth").classList.add("active");
+                secGuj.style.display = "block";
+                secEng.style.display = "block";
+            }
+        }
+
+        function toggleStartExamBtn(isChecked) {
+            const btn = document.getElementById("btnStartExam");
+            if (btn) {
+                btn.disabled = !isChecked;
+            }
+        }
+
+        function beginActualExam() {
+            const chk = document.getElementById("chkAgreeInstructions");
+            if (!chk || !chk.checked) {
+                alert("Please check the confirmation box to proceed / કૃપા કરીને કન્ફર્મેશન બોક્સ પસંદ કરો.");
+                return;
+            }
+            const instScreen = document.getElementById("instructionScreen");
+            if (instScreen) {
+                instScreen.style.display = "none";
+            }
+            isExamStarted = true;
             startTimer();
             startDeviceHeartbeat();
-        });
+        }
 
         async function loadExamQuestions() {
             try {
