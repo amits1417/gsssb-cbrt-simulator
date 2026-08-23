@@ -19,44 +19,54 @@
                 <span>CCE Mocktest</span>
             </a>
 
-            <ul class="nav-links">
-                <li><a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}"><i class="fa-solid fa-layer-group"></i> Mock Tests</a></li>
-                <li><a href="/leaderboard" class="nav-link {% if request.path == '/leaderboard' %}active{% endif %}"><i class="fa-solid fa-trophy"></i> Leaderboard</a></li>
-                <li><a href="/pricing" class="nav-link {% if request.path in ['/pricing', '/payment'] %}active{% endif %}"><i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Pricing & Plans</a></li>
-                <li>
-                    <button type="button" onclick="openGlobalSupportModal('msg')" class="nav-link" style="background: none; border: none; cursor: pointer; color: inherit; font: inherit; padding: 0.5rem 0.8rem; display: flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-headset" style="color: #0284c7;"></i> Support / સપોર્ટ
-                    </button>
-                </li>
-                {% if user %}
-                <li><a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
-                {% if user.is_admin %}
-                <li><a href="/admin" class="nav-link {% if request.path == '/admin' %}active{% endif %}"><i class="fa-solid fa-shield-halved"></i> Admin</a></li>
-                {% endif %}
-                {% endif %}
-            </ul>
+            <!-- Mobile Hamburger Toggle Button -->
+            <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation">
+                <i class="fa-solid fa-bars"></i>
+            </button>
 
-            <div class="nav-auth">
-                {% if user %}
-                    {% if user.is_paid %}
-                        <span class="badge badge-pro"><i class="fa-solid fa-crown"></i> PRO ACCESS</span>
-                    {% else %}
-                        <a href="/pricing" class="badge badge-free"><i class="fa-solid fa-gift"></i> FREE TRIAL (Upgrade)</a>
+            <!-- Nav Menu Wrapper (collapses on mobile) -->
+            <div class="nav-menu-wrapper" id="navMenuWrapper">
+                <ul class="nav-links">
+                    <li><a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}"><i class="fa-solid fa-layer-group"></i> Mock Tests</a></li>
+                    <li><a href="/leaderboard" class="nav-link {% if request.path == '/leaderboard' %}active{% endif %}"><i class="fa-solid fa-trophy"></i> Leaderboard</a></li>
+                    <li><a href="/pricing" class="nav-link {% if request.path in ['/pricing', '/payment'] %}active{% endif %}"><i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Pricing & Plans</a></li>
+                    <li>
+                        <button type="button" onclick="openGlobalSupportModal('msg')" class="nav-link nav-link-btn">
+                            <i class="fa-solid fa-headset" style="color: #0284c7;"></i> Support / સપોર્ટ
+                        </button>
+                    </li>
+                    {% if user %}
+                    <li><a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+                    {% if user.is_admin %}
+                    <li><a href="/admin" class="nav-link {% if request.path == '/admin' %}active{% endif %}"><i class="fa-solid fa-shield-halved"></i> Admin</a></li>
                     {% endif %}
-                    
-                    <span style="font-weight: 600; font-size: 0.9rem; color: var(--dark);">
-                        <i class="fa-regular fa-user" style="margin-right: 4px;"></i> {{ user.name }}
-                    </span>
-                    <button onclick="handleLogout()" class="btn btn-outline btn-sm">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
-                    </button>
-                {% else %}
-                    <a href="/auth" class="btn btn-outline btn-sm">Log In</a>
-                    <a href="/auth?tab=signup" class="btn btn-primary btn-sm">Sign Up Free</a>
-                {% endif %}
+                    {% endif %}
+                </ul>
+
+                <div class="nav-auth">
+                    {% if user %}
+                        {% if user.is_paid %}
+                            <span class="badge badge-pro"><i class="fa-solid fa-crown"></i> PRO ACCESS</span>
+                        {% else %}
+                            <a href="/pricing" class="badge badge-free"><i class="fa-solid fa-gift"></i> FREE TRIAL (Upgrade)</a>
+                        {% endif %}
+                        
+                        <span class="nav-user-name">
+                            <i class="fa-regular fa-user"></i> {{ user.name }}
+                        </span>
+                        <button onclick="handleLogout()" class="btn btn-outline btn-sm">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                        </button>
+                    {% else %}
+                        <a href="/auth" class="btn btn-outline btn-sm">Log In</a>
+                        <a href="/auth?tab=signup" class="btn btn-primary btn-sm">Sign Up Free</a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </nav>
+    <div class="mobile-nav-backdrop" id="mobileNavBackdrop"></div>
+
 
     <!-- Main Page Content Block -->
     {% block content %}{% endblock %}
@@ -419,7 +429,31 @@
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Device Reset Request to Super Admin';
             }
         }
+
+        // Mobile Navbar Hamburger Toggle
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('mobileNavToggle');
+            const navWrapper = document.getElementById('navMenuWrapper');
+            const backdrop = document.getElementById('mobileNavBackdrop');
+
+            if (toggleBtn && navWrapper) {
+                toggleBtn.addEventListener('click', () => {
+                    const isOpen = navWrapper.classList.toggle('open');
+                    toggleBtn.innerHTML = isOpen ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
+                    if (backdrop) backdrop.classList.toggle('active', isOpen);
+                });
+            }
+
+            if (backdrop) {
+                backdrop.addEventListener('click', () => {
+                    if (navWrapper) navWrapper.classList.remove('open');
+                    if (toggleBtn) toggleBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
+                    backdrop.classList.remove('active');
+                });
+            }
+        });
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>
+

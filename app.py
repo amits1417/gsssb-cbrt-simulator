@@ -518,8 +518,9 @@ def api_submit_exam():
             'is_correct': is_correct
         })
         
-    # GSSSB CBRT Marking Scheme: +1.0 for Correct, -0.33 for Incorrect, 0 for Unattempted
-    net_score = round(max(0.0, (correct_count * 1.0) - (incorrect_count * 0.33)), 2)
+    # GSSSB CBRT Marking Scheme: +1.0 for Correct, -0.25 for Incorrect, 0 for Unattempted
+    net_score = round(max(0.0, (correct_count * 1.0) - (incorrect_count * 0.25)), 2)
+
     attempted_total = correct_count + incorrect_count
     accuracy = round((correct_count / attempted_total * 100), 1) if attempted_total > 0 else 0.0
     

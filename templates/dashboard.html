@@ -339,7 +339,7 @@
                     <div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 0.5rem;">
                         <span>Q.${q.number}</span>
                         <span style="font-size: 0.85rem; color: ${isCorrect ? 'var(--success)' : (isUnattempted ? 'var(--text-muted)' : 'var(--danger)')};">
-                            ${isCorrect ? '<i class="fa-solid fa-circle-check"></i> Correct (+1.0)' : (isUnattempted ? '<i class="fa-solid fa-circle-minus"></i> Unattempted (0.0)' : '<i class="fa-solid fa-circle-xmark"></i> Incorrect (-0.33)')}
+                            ${isCorrect ? '<i class="fa-solid fa-circle-check"></i> Correct (+1.0)' : (isUnattempted ? '<i class="fa-solid fa-circle-minus"></i> Unattempted (0.0)' : '<i class="fa-solid fa-circle-xmark"></i> Incorrect (-0.25)')}
                         </span>
                     </div>
                     <div style="font-size: 0.95rem; margin-bottom: 0.75rem; white-space: pre-line;">${q.english_prompt || ''}</div>

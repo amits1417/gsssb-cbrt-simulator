@@ -6,22 +6,22 @@
 <div class="container">
 
     <!-- Hero Section -->
-    <div class="hero" style="text-align: center; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%); color: white; border-radius: var(--radius-lg); padding: 2.5rem 2rem; margin-bottom: 2rem; box-shadow: 0 12px 36px rgba(49, 46, 129, 0.25);">
-        <div style="display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(8px); padding: 0.35rem 1rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; color: #fde047; margin-bottom: 1rem; letter-spacing: 0.5px;">
+    <div class="hero" style="text-align: center; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%); color: white; border-radius: var(--radius-lg); box-shadow: 0 12px 36px rgba(49, 46, 129, 0.25);">
+        <div style="display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(8px); padding: 0.35rem 1rem; border-radius: 9999px; font-size: 0.82rem; font-weight: 700; color: #fde047; margin-bottom: 1rem; letter-spacing: 0.5px; max-width: 100%; word-break: break-word;">
             <i class="fa-solid fa-award"></i> Official Advt. No: GSSSB/202324/212 (CCE Class-III)
         </div>
         
-        <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 0.85rem; line-height: 1.25; color: white;">
+        <h1 style="font-weight: 800; margin-bottom: 0.85rem; line-height: 1.25; color: white;">
             GSSSB Combined Competitive Exam (Class-III)
         </h1>
 
         <!-- Bilingual Detailed Description Box -->
-        <div style="max-width: 900px; margin: 0 auto 1.5rem auto; line-height: 1.6; font-size: 1.02rem; color: #e0e7ff; background: rgba(0,0,0,0.18); border-radius: 12px; padding: 1.2rem 1.5rem; border: 1px solid rgba(255,255,255,0.15);">
+        <div style="max-width: 900px; margin: 0 auto 1.5rem auto; line-height: 1.6; font-size: 0.98rem; color: #e0e7ff; background: rgba(0,0,0,0.18); border-radius: 12px; padding: 1rem 1.2rem; border: 1px solid rgba(255,255,255,0.15); word-break: break-word;">
             <p style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">
                 <i class="fa-solid fa-circle-check" style="color: #4ade80; margin-right: 6px;"></i> 
                 This Mock Test Series contains all <strong>71 Real Official Question Papers</strong> conducted by GSSSB Board for <strong>Advertisement No: GSSSB/202324/212</strong> along with complete Answer Keys.
             </p>
-            <p style="margin: 0; font-weight: 600; color: #fef08a; font-size: 0.98rem; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 0.65rem;">
+            <p style="margin: 0; font-weight: 600; color: #fef08a; font-size: 0.92rem; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 0.65rem;">
                 <i class="fa-solid fa-language" style="margin-right: 6px;"></i>
                 ગુજરાત ગૌણ સેવા પસંદગી મંડળ (GSSSB) દ્વારા <strong>જાહેરાત ક્રમાંક: GSSSB/202324/212</strong> અંતર્ગત લેવાયેલ તમામ <strong>71 ઓરિજિનલ પેપર્સ</strong> આ મોક ટેસ્ટ સિરીઝમાં સંપૂર્ણ આન્સર કી સાથે ઉપલબ્ધ છે.
             </p>
@@ -34,12 +34,12 @@
             <div class="hero-badge-item" style="background: rgba(255,255,255,0.12); padding: 0.45rem 1rem; border-radius: 9999px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.2);"><i class="fa-solid fa-shield-halved" style="color: #f87171;"></i> Single Device Protected</div>
         </div>
 
-        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-            <a href="/exam/PAPER-1" class="btn btn-accent btn-lg" style="background: #f59e0b; color: #1e1b4b; font-weight: 800; border: none; padding: 0.85rem 1.75rem;">
+        <div style="display: flex; gap: 0.85rem; justify-content: center; flex-wrap: wrap;">
+            <a href="/exam/PAPER-1" class="btn btn-accent btn-lg" style="background: #f59e0b; color: #1e1b4b; font-weight: 800; border: none; padding: 0.85rem 1.5rem;">
                 <i class="fa-solid fa-play"></i> Start Free Mock Test (Paper 1)
             </a>
             {% if not user or not user.is_paid %}
-            <a href="/pricing" class="btn btn-primary btn-lg" style="background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.4); font-weight: 700;">
+            <a href="/pricing" class="btn btn-primary btn-lg" style="background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.4); font-weight: 700; padding: 0.85rem 1.5rem;">
                 <i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Unlock All 71 Papers
             </a>
             {% endif %}
@@ -179,7 +179,7 @@
                     <div class="exam-card-meta">
                         <span><i class="fa-regular fa-clock"></i> 60 Mins</span>
                         <span><i class="fa-regular fa-circle-question"></i> 100 MCQs</span>
-                        <span><i class="fa-solid fa-scale-balanced"></i> +1 / -0.33</span>
+                        <span><i class="fa-solid fa-scale-balanced"></i> +1 / -0.25</span>
                     </div>
 
                     ${isCompleted ? `

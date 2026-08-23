@@ -392,7 +392,7 @@ function submitExam() {
             scoreForQuestion = 1.0;
         } else {
             incorrect++;
-            scoreForQuestion = -0.33;
+            scoreForQuestion = -0.25;
         }
         
         // Build review card details
@@ -412,7 +412,7 @@ function submitExam() {
             cardBorderColor = "#eb3b5a"; // Red
             cardBgColor = "#ffeef0";
             statusColor = "#eb3b5a";
-            statusText = `Incorrect (Score: -0.33)`;
+            statusText = `Incorrect (Score: -0.25)`;
         }
         
         // Generate options review UI
@@ -496,7 +496,7 @@ function submitExam() {
         reviewContainer.innerHTML += cardHtml;
     });
     
-    const rawScore = correct * 1.0 - incorrect * 0.33;
+    const rawScore = correct * 1.0 - incorrect * 0.25;
     
     // Hide exam screen, show results screen
     document.getElementById("examScreen").style.display = "none";

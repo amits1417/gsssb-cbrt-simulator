@@ -79,7 +79,7 @@ Aap is website ko **Render.com** ya **Railway.app** par 100% Free me live kar sa
 - ✅ 71 Full GSSSB Mock Papers (7,100 Gujarati & English Scanned MCQs)
 - ✅ 2 Free Mock Tests (Paper 1 & 2) + 69 Pro Mock Tests (Paper 3-71 locked)
 - ✅ Official TCS Exam Simulator Interface + Palette + 60-minute Timer
-- ✅ Negative Marking (+1.0 for Correct, -0.33 for Incorrect, 0 for Unattempted)
+- ✅ Negative Marking (+1.0 for Correct, -0.25 for Incorrect, 0 for Unattempted)
 - ✅ Student Dashboard with 3 Visual Chart.js Analytics Graphs
 - ✅ Question-by-Question Solution Review Panel
 - ✅ Real-time Gujarat Statewide Leaderboard with Rank & Percentile

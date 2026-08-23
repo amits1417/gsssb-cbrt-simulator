@@ -59,7 +59,7 @@
             </div>
             <div class="question-header">
                 <span id="qNumberTitle" style="font-weight: 700; font-size: 16px; color: #2c3e50;">Question No. 1</span>
-                <span style="font-size: 13px; color: #7f8c8d;">Marks: Correct +1.0 | Wrong -0.33</span>
+                <span style="font-size: 13px; color: #7f8c8d;">Marks: Correct +1.0 | Wrong -0.25</span>
             </div>
             
             <div class="question-content">
@@ -260,7 +260,7 @@
                     <div style="font-size: 22px; font-weight: 800; color: #16a34a;" id="resCorrect">0</div>
                 </div>
                 <div style="background: #fef2f2; padding: 15px; border-radius: 8px; border: 1px solid #fecaca;">
-                    <div style="font-size: 13px; color: #991b1b;">Incorrect (-0.33)</div>
+                    <div style="font-size: 13px; color: #991b1b;">Incorrect (-0.25)</div>
                     <div style="font-size: 22px; font-weight: 800; color: #dc2626;" id="resIncorrect">0</div>
                 </div>
                 <div style="background: #eef2ff; padding: 15px; border-radius: 8px; border: 2px solid #818cf8;">
@@ -631,7 +631,7 @@
                     <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 6px;">
                         <span>Q.${q.number}</span>
                         <span style="font-size: 13px; color: ${isCorrect ? '#16a34a' : (isUnattempted ? '#64748b' : '#dc2626')};">
-                            ${isCorrect ? '✔ Correct (+1.0)' : (isUnattempted ? '— Unattempted (0.0)' : '✖ Incorrect (-0.33)')}
+                            ${isCorrect ? '✔ Correct (+1.0)' : (isUnattempted ? '— Unattempted (0.0)' : '✖ Incorrect (-0.25)')}
                         </span>
                     </div>
                     <div style="font-size: 14px; margin-bottom: 8px; white-space: pre-line;">${q.english_prompt || ''}</div>
