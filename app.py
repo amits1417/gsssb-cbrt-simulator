@@ -789,10 +789,18 @@ def api_admin_toggle_sub(user):
     data = request.get_json() or {}
     target_user_id = data.get('user_id')
     is_paid = bool(data.get('is_paid'))
+    days = data.get('days', 30)
+    plan_name = data.get('plan_name', 'Manual Admin Activation')
+    amount = data.get('amount', 300)
+    
     if not target_user_id:
         return jsonify({'error': 'user_id is required'}), 400
-    db.toggle_user_subscription(target_user_id, is_paid)
-    return jsonify({'success': True, 'message': f'Subscription {"activated" if is_paid else "deactivated"} successfully!'})
+        
+    db.toggle_user_subscription(target_user_id, is_paid, days=days, plan_name=plan_name, amount=amount)
+    return jsonify({
+        'success': True,
+        'message': f'Subscription {"activated (" + str(plan_name) + ")" if is_paid else "deactivated"} successfully!'
+    })
 
 @app.route('/api/admin/verify-payment', methods=['POST'])
 @admin_required

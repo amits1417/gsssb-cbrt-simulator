@@ -182,11 +182,11 @@
                         <td style="text-align: center;">
                             {% if not u.is_admin %}
                                 {% if u.is_paid %}
-                                <button onclick="toggleSubscription({{ u.id }}, 'deactivate')" class="btn btn-danger btn-sm">
+                                <button onclick="confirmDeactivateSub({{ u.id }}, '{{ u.name|replace('\'', '') }}')" class="btn btn-danger btn-sm" title="Deactivate PRO access">
                                     <i class="fa-solid fa-ban"></i> Deactivate
                                 </button>
                                 {% else %}
-                                <button onclick="toggleSubscription({{ u.id }}, 'activate')" class="btn btn-primary btn-sm" style="background: var(--success);">
+                                <button onclick="openManualSubModal({{ u.id }}, '{{ u.name|replace('\'', '') }}', '{{ u.email }}')" class="btn btn-primary btn-sm" style="background: #059669; border-color: #059669;" title="Manually Activate PRO Plan">
                                     <i class="fa-solid fa-crown"></i> Activate PRO
                                 </button>
                                 {% endif %}
@@ -399,27 +399,179 @@
     </div>
 </div>
 
+<!-- Manual Pro Subscription Activation Modal -->
+<div class="modal-overlay" id="manualSubModal" style="display: none; align-items: center; justify-content: center; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.7); z-index: 9999; padding: 1rem;">
+    <div class="card" style="max-width: 480px; width: 100%; padding: 2rem; background: white; border-radius: var(--radius-md); box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative;">
+        <button type="button" onclick="closeManualSubModal()" style="position: absolute; top: 1rem; right: 1rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; width: 32px; height: 32px; font-size: 14px; font-weight: 700; cursor: pointer; color: #475569; display: flex; align-items: center; justify-content: center;">✕</button>
+
+        <div style="text-align: center; margin-bottom: 1.25rem;">
+            <div style="width: 52px; height: 52px; background: #dcfce7; color: #16a34a; border-radius: var(--radius-full); display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 0.5rem;">
+                <i class="fa-solid fa-crown"></i>
+            </div>
+            <h3 style="margin: 0; font-size: 1.35rem; color: #0f172a;">Manual PRO Plan Activation</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
+                Candidate: <strong id="modalCandidateName" style="color: #0f172a;"></strong> (<span id="modalCandidateEmail"></span>)
+            </p>
+        </div>
+
+        <form id="manualSubForm" onsubmit="handleManualSubSubmit(event)">
+            <input type="hidden" id="subUserId">
+
+            <!-- Plan Selection Option -->
+            <div style="margin-bottom: 1.1rem;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--dark);">
+                    Select Plan / Duration (પ્લાન અને મુદત પસંદ કરો)
+                </label>
+                <select id="subPlanSelect" onchange="onPlanSelectChange()" style="width: 100%; padding: 0.75rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem; outline: none; font-weight: 600;">
+                    <option value="30" data-amount="300" data-name="1 Month Plan" selected>🌟 1 Month (30 Days) - ₹300</option>
+                    <option value="90" data-amount="600" data-name="3 Months Plan">🌟 3 Months (90 Days) - ₹600</option>
+                    <option value="180" data-amount="999" data-name="6 Months Plan">🌟 6 Months (180 Days) - ₹999</option>
+                    <option value="365" data-amount="1499" data-name="1 Year Plan">🌟 1 Year (365 Days) - ₹1,499</option>
+                    <option value="3650" data-amount="2000" data-name="Lifetime Access">♾️ Lifetime Permanent Access - All 71 Papers</option>
+                    <option value="custom" data-amount="0" data-name="Custom Plan">✏️ Custom Days / Custom Plan</option>
+                </select>
+            </div>
+
+            <!-- Custom Days Container (Hidden by default) -->
+            <div id="customDaysGroup" style="display: none; margin-bottom: 1.1rem;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--dark);">
+                    Enter Custom Validity Days (દિવસોની સંખ્યા)
+                </label>
+                <input type="number" id="subCustomDays" min="1" max="3650" value="45" placeholder="e.g. 45" style="width: 100%; padding: 0.7rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem; outline: none;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--dark);">
+                        Amount Received (₹)
+                    </label>
+                    <input type="number" id="subAmount" value="300" required min="0" style="width: 100%; padding: 0.7rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem; outline: none;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--dark);">
+                        Plan Name / Note
+                    </label>
+                    <input type="text" id="subPlanName" value="1 Month Plan" required style="width: 100%; padding: 0.7rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem; outline: none;">
+                </div>
+            </div>
+
+            <button type="submit" id="btnSubmitManualSub" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem; background: #059669; border-color: #059669;">
+                <i class="fa-solid fa-check-circle"></i> Confirm & Activate PRO Access
+            </button>
+        </form>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-    async function toggleUserSub(userId, isPaid) {
-        if (!confirm(`Are you sure you want to ${isPaid ? 'ACTIVATE' : 'DEACTIVATE'} Pro Subscription for user #${userId}?`)) return;
+    // Manual Subscription Activation Modal Handlers
+    function openManualSubModal(userId, name, email) {
+        document.getElementById('subUserId').value = userId;
+        document.getElementById('modalCandidateName').innerText = name + ' (User #' + userId + ')';
+        document.getElementById('modalCandidateEmail').innerText = email;
+        document.getElementById('subPlanSelect').value = '30';
+        onPlanSelectChange();
+        document.getElementById('manualSubModal').style.display = 'flex';
+    }
+
+    function closeManualSubModal() {
+        document.getElementById('manualSubModal').style.display = 'none';
+    }
+
+    function onPlanSelectChange() {
+        const select = document.getElementById('subPlanSelect');
+        const selectedOpt = select.options[select.selectedIndex];
+        const val = select.value;
+        const customGroup = document.getElementById('customDaysGroup');
+        const amountInput = document.getElementById('subAmount');
+        const nameInput = document.getElementById('subPlanName');
+
+        if (val === 'custom') {
+            customGroup.style.display = 'block';
+            nameInput.value = 'Custom Plan';
+            amountInput.value = '0';
+        } else {
+            customGroup.style.display = 'none';
+            amountInput.value = selectedOpt.getAttribute('data-amount') || '300';
+            nameInput.value = selectedOpt.getAttribute('data-name') || 'Pro Plan';
+        }
+    }
+
+    async function handleManualSubSubmit(e) {
+        e.preventDefault();
+        const userId = document.getElementById('subUserId').value;
+        const select = document.getElementById('subPlanSelect');
+        const val = select.value;
+        let days = 30;
+        if (val === 'custom') {
+            days = parseInt(document.getElementById('subCustomDays').value) || 30;
+        } else {
+            days = parseInt(val) || 30;
+        }
+
+        const planName = document.getElementById('subPlanName').value.trim();
+        const amount = parseFloat(document.getElementById('subAmount').value) || 0;
+        const btn = document.getElementById('btnSubmitManualSub');
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Activating PRO Access...';
+
         try {
             const res = await fetch('/api/admin/toggle-subscription', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId, is_paid: isPaid })
+                body: JSON.stringify({
+                    user_id: parseInt(userId),
+                    is_paid: true,
+                    days: days,
+                    plan_name: planName,
+                    amount: amount
+                })
             });
             const data = await res.json();
             if (res.ok) {
-                showToast(data.message, 'success');
+                showToast(data.message || 'PRO Subscription activated successfully!', 'success');
+                closeManualSubModal();
+                setTimeout(() => location.reload(), 800);
+            } else {
+                showToast(data.error || 'Failed to activate subscription', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Confirm & Activate PRO Access';
+            }
+        } catch (err) {
+            showToast('Network error, please try again', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Confirm & Activate PRO Access';
+        }
+    }
+
+    async function confirmDeactivateSub(userId, name) {
+        if (!confirm(`Are you sure you want to DEACTIVATE Pro Subscription for "${name}" (#${userId})? They will be reverted to Free Trial.`)) return;
+        try {
+            const res = await fetch('/api/admin/toggle-subscription', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, is_paid: false })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(data.message || 'Subscription deactivated', 'success');
                 setTimeout(() => location.reload(), 800);
             } else {
                 showToast(data.error || 'Failed to update', 'error');
             }
         } catch (err) {
             showToast('Network error', 'error');
+        }
+    }
+
+    async function toggleSubscription(userId, action) {
+        if (action === 'activate') {
+            openManualSubModal(userId, 'Candidate', '');
+        } else {
+            confirmDeactivateSub(userId, 'Candidate');
         }
     }
 

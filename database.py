@@ -1099,18 +1099,38 @@ def approve_payment(payment_id):
     conn.close()
     return True
 
-def toggle_user_subscription(user_id, is_paid, days=30):
+def toggle_user_subscription(user_id, is_paid, days=30, plan_name='Manual Admin Plan', amount=300):
     conn = get_db_connection()
     cursor = conn.cursor()
     if is_paid:
         now = datetime.datetime.now()
         now_str = now.isoformat()
-        expires_str = (now + datetime.timedelta(days=days)).isoformat()
+        try:
+            days_int = int(days)
+        except:
+            days_int = 30
+            
+        if days_int <= 0 or days_int >= 3650: # Lifetime
+            expires_str = (now + datetime.timedelta(days=3650)).isoformat()
+            duration_label = "Lifetime"
+        else:
+            expires_str = (now + datetime.timedelta(days=days_int)).isoformat()
+            duration_label = f"{days_int} Days"
+            
         cursor.execute('''
             UPDATE users
             SET is_paid = 1, paid_at = ?, expires_at = ?
             WHERE id = ?
         ''', (now_str, expires_str, user_id))
+        
+        # Log entry in payments table for audit & analytics
+        try:
+            cursor.execute('''
+                INSERT INTO payments (user_id, amount, payment_method, utr_number, status, notes, created_at)
+                VALUES (?, ?, 'ADMIN_MANUAL', ?, 'approved', ?, ?)
+            ''', (user_id, float(amount or 0), f"MANUAL-{str(uuid.uuid4())[:8].upper()}", f"Admin Activated: {plan_name} ({duration_label})", now_str))
+        except:
+            pass
     else:
         cursor.execute('''
             UPDATE users
