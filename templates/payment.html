@@ -435,16 +435,34 @@
             <!-- Right: Direct Pay & UTR Verification Form -->
             <div>
                 <!-- Direct UPI Intent for Mobile -->
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">
-                        Quick Pay on Mobile:
-                    </label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                        <a id="linkGpay" href="upi://pay?cu=INR&mc=8241&mode=19&pa=amit109881.rzp@rxairtel&tn=Payment%20To%20AMIT&tr=TSiL2omtBgwiwSqrv2" class="btn btn-outline btn-sm" style="font-size: 0.85rem;">
-                            <i class="fa-solid fa-mobile-screen"></i> GPay / PhonePe
+                <div style="margin-bottom: 1.5rem; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 1.15rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="font-size: 0.88rem; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-mobile-screen-button"></i> 1-Tap Pay via Mobile App:
+                        </span>
+                        <span id="mobilePayBadge" style="font-size: 0.8rem; font-weight: 800; color: #15803d; background: white; padding: 2px 8px; border-radius: 6px; border: 1px solid #bbf7d0;">
+                            Pay ₹299
+                        </span>
+                    </div>
+
+                    <!-- Big Primary 1-Tap UPI Launch Button -->
+                    <a id="btnPrimaryUpi" href="upi://pay?pa=amit109881.rzp@rxairtel&pn=AMIT&am=299.00&cu=INR&tn=GSSSB%20CCE%201%20Month%20Plan" class="btn" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 0.85rem 1rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-weight: 700; font-size: 0.95rem; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); margin-bottom: 0.65rem;">
+                        <i class="fa-solid fa-bolt" style="font-size: 1.1rem;"></i> Click to Pay via GPay / PhonePe / Paytm / BHIM
+                    </a>
+
+                    <!-- Sub App Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem;">
+                        <a id="linkGpay" href="upi://pay?pa=amit109881.rzp@rxairtel&pn=AMIT&am=299.00&cu=INR&tn=GSSSB%20CCE%201%20Month%20Plan" class="btn btn-outline btn-sm" style="background: white; border: 1px solid #cbd5e1; font-size: 0.76rem; font-weight: 700; color: #1e293b; padding: 0.45rem 0.2rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                            <i class="fa-brands fa-google-pay" style="font-size: 1.25rem; color: #4285f4;"></i> GPay
                         </a>
-                        <a id="linkPaytm" href="upi://pay?cu=INR&mc=8241&mode=19&pa=amit109881.rzp@rxairtel&tn=Payment%20To%20AMIT&tr=TSiL2omtBgwiwSqrv2" class="btn btn-outline btn-sm" style="font-size: 0.85rem;">
-                            <i class="fa-solid fa-wallet"></i> Paytm / BHIM
+                        <a id="linkPhonepe" href="upi://pay?pa=amit109881.rzp@rxairtel&pn=AMIT&am=299.00&cu=INR&tn=GSSSB%20CCE%201%20Month%20Plan" class="btn btn-outline btn-sm" style="background: white; border: 1px solid #cbd5e1; font-size: 0.76rem; font-weight: 700; color: #1e293b; padding: 0.45rem 0.2rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                            <i class="fa-solid fa-mobile-retro" style="font-size: 1.1rem; color: #5f259f;"></i> PhonePe
+                        </a>
+                        <a id="linkPaytm" href="upi://pay?pa=amit109881.rzp@rxairtel&pn=AMIT&am=299.00&cu=INR&tn=GSSSB%20CCE%201%20Month%20Plan" class="btn btn-outline btn-sm" style="background: white; border: 1px solid #cbd5e1; font-size: 0.76rem; font-weight: 700; color: #1e293b; padding: 0.45rem 0.2rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                            <i class="fa-solid fa-wallet" style="font-size: 1.1rem; color: #00b9f1;"></i> Paytm
+                        </a>
+                        <a id="linkBhim" href="upi://pay?pa=amit109881.rzp@rxairtel&pn=AMIT&am=299.00&cu=INR&tn=GSSSB%20CCE%201%20Month%20Plan" class="btn btn-outline btn-sm" style="background: white; border: 1px solid #cbd5e1; font-size: 0.76rem; font-weight: 700; color: #1e293b; padding: 0.45rem 0.2rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                            <i class="fa-solid fa-building-columns" style="font-size: 1.1rem; color: #00529b;"></i> BHIM
                         </a>
                     </div>
                 </div>
@@ -515,11 +533,22 @@
         }
 
         // Direct intent links for mobile apps with embedded amount (am=amount)
-        const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${amount}&cu=INR&tn=${encodeURIComponent('GSSSB CCE ' + planName)}`;
+        const amtFormatted = (parseFloat(amount) || 299).toFixed(2);
+        const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${amtFormatted}&cu=INR&tn=${encodeURIComponent('GSSSB CCE ' + planName)}`;
+        
+        const primaryBtn = document.getElementById('btnPrimaryUpi');
         const gpay = document.getElementById('linkGpay');
+        const phonepe = document.getElementById('linkPhonepe');
         const paytm = document.getElementById('linkPaytm');
+        const bhim = document.getElementById('linkBhim');
+        const mobileBadge = document.getElementById('mobilePayBadge');
+
+        if (primaryBtn) primaryBtn.href = upiUrl;
         if (gpay) gpay.href = upiUrl;
+        if (phonepe) phonepe.href = upiUrl;
         if (paytm) paytm.href = upiUrl;
+        if (bhim) bhim.href = upiUrl;
+        if (mobileBadge) mobileBadge.innerText = `Pay ₹${amount}`;
 
         // Smooth scroll to checkout
         document.getElementById('checkoutSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
