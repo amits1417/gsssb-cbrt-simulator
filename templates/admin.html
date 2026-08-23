@@ -469,15 +469,19 @@
     // Manual Subscription Activation Modal Handlers
     function openManualSubModal(userId, name, email) {
         document.getElementById('subUserId').value = userId;
-        document.getElementById('modalCandidateName').innerText = name + ' (User #' + userId + ')';
-        document.getElementById('modalCandidateEmail').innerText = email;
+        document.getElementById('modalCandidateName').innerText = (name || 'Candidate') + ' (User #' + userId + ')';
+        document.getElementById('modalCandidateEmail').innerText = email || '';
         document.getElementById('subPlanSelect').value = '30';
         onPlanSelectChange();
-        document.getElementById('manualSubModal').style.display = 'flex';
+        const modal = document.getElementById('manualSubModal');
+        modal.classList.add('active');
+        modal.style.display = 'flex';
     }
 
     function closeManualSubModal() {
-        document.getElementById('manualSubModal').style.display = 'none';
+        const modal = document.getElementById('manualSubModal');
+        modal.classList.remove('active');
+        modal.style.display = 'none';
     }
 
     function onPlanSelectChange() {
