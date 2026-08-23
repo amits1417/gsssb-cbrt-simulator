@@ -185,22 +185,31 @@ def payment_page():
 @app.route('/api/qr-code')
 def api_generate_qr_code():
     amount = request.args.get('amount', '299').strip()
-    plan = request.args.get('plan', 'Mock Test Pass').strip()
-    vpa = "amit109881.rzp@rxairtel"
-    payee = "AMIT"
+    plan = request.args.get('plan', '1 Month Plan').strip()
+    settings = db.get_settings()
+    vpa = settings.get('upi_id', 'amit109881.rzp@rxairtel')
+    payee = settings.get('upi_name', 'AMIT')
     
-    # Dynamic UPI URI format with exact amount parameter (am=...)
-    upi_uri = f"upi://pay?pa={vpa}&pn={payee}&am={amount}&cu=INR&tn=GSSSB CCE {plan}"
+    try:
+        amt_float = float(amount)
+        amount_str = f"{amt_float:.2f}"
+    except Exception:
+        amount_str = "299.00"
+        
+    import urllib.parse
+    note = f"GSSSB CCE {plan}"
+    # Standard NPCI UPI URI with auto-set amount
+    upi_uri = f"upi://pay?pa={vpa}&pn={urllib.parse.quote(payee)}&am={amount_str}&cu=INR&tn={urllib.parse.quote(note)}"
     
     qr = qrcode.QRCode(
-        version=1,
+        version=None,
         error_correction=qrcode.constants.ERROR_CORRECT_M,
-        box_size=8,
+        box_size=10,
         border=2,
     )
     qr.add_data(upi_uri)
     qr.make(fit=True)
-    img = qr.make_image(fill_color="#1e1b4b", back_color="white")
+    img = qr.make_image(fill_color="#0f172a", back_color="white")
     
     buf = io.BytesIO()
     img.save(buf, format='PNG')
