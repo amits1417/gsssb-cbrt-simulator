@@ -3,7 +3,36 @@ import os
 import json
 import uuid
 import datetime
+import threading
+import urllib.request
+import urllib.parse
 from werkzeug.security import generate_password_hash, check_password_hash
+
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '8659670199:AAFTPDU7EIDs2SchEMSy9hoIUvd3k9-Gz3M')
+TELEGRAM_ADMIN_CHAT_ID = os.environ.get('TELEGRAM_ADMIN_CHAT_ID', '1817985325')
+
+def send_telegram_notification(text):
+    """Send real-time mobile push notification to Super Admin via Telegram Bot in a non-blocking background thread."""
+    def _send():
+        token = os.environ.get('TELEGRAM_BOT_TOKEN', TELEGRAM_BOT_TOKEN)
+        chat_id = os.environ.get('TELEGRAM_ADMIN_CHAT_ID', TELEGRAM_ADMIN_CHAT_ID)
+        if not token or not chat_id:
+            return
+        try:
+            url = f"https://api.telegram.org/bot{token}/sendMessage"
+            payload = urllib.parse.urlencode({
+                'chat_id': str(chat_id).strip(),
+                'text': text,
+                'parse_mode': 'HTML',
+                'disable_web_page_preview': 'true'
+            }).encode('utf-8')
+            req = urllib.request.Request(url, data=payload, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+            urllib.request.urlopen(req, timeout=6)
+        except Exception:
+            pass
+            
+    t = threading.Thread(target=_send, daemon=True)
+    t.start()
 
 def _get_db_path():
     if os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME') or os.environ.get('LAMBDA_TASK_ROOT'):
@@ -245,6 +274,14 @@ def create_user(name, email, phone, password, device_id=None):
     cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
     user = dict(cursor.fetchone())
     conn.close()
+    
+    # Trigger instant Telegram notification to Admin
+    send_telegram_notification(f"""🔔 <b>NEW CANDIDATE REGISTERED</b>
+👤 <b>Name:</b> {name.strip()}
+📧 <b>Email:</b> {email_clean}
+📱 <b>Mobile:</b> {phone_clean}
+🆔 <b>UID:</b> <code>{user_uid}</code> (User #{user_id})
+⏰ <b>Time:</b> {datetime.datetime.now().strftime('%d %b %Y, %I:%M %p')}""")
     
     return user, session_token
 
@@ -1053,7 +1090,26 @@ def create_payment_request(user_id, utr_number, amount=300.0, payment_method='UP
     ''', (user_id, amount, payment_method, utr_number.strip(), notes))
     payment_id = cursor.lastrowid
     conn.commit()
+    
+    # Get user details for Telegram alert
+    cursor.execute('SELECT name, email, phone, user_uid FROM users WHERE id = ?', (user_id,))
+    u_row = cursor.fetchone()
     conn.close()
+    
+    u_name = u_row['name'] if u_row else 'Candidate'
+    u_email = u_row['email'] if u_row else 'N/A'
+    u_phone = u_row['phone'] if u_row else 'N/A'
+    u_uid = u_row['user_uid'] if u_row else f'User #{user_id}'
+    
+    send_telegram_notification(f"""🚨 <b>NEW UPI PAYMENT / UTR SUBMITTED</b>
+👤 <b>Candidate:</b> {u_name} (User #{user_id})
+🆔 <b>UID:</b> <code>{u_uid}</code>
+💵 <b>Amount:</b> ₹{amount:.2f}
+💳 <b>UTR / Reference ID:</b> <code>{utr_number.strip()}</code>
+📱 <b>Contact:</b> {u_phone} ({u_email})
+📝 <b>Payment ID:</b> #{payment_id}
+🔗 <b>Action:</b> <a href="https://ccemock.online/admin">Approve in Admin Panel</a>""")
+    
     return payment_id
 
 def approve_payment(payment_id):
@@ -1266,6 +1322,14 @@ def create_support_ticket(name, email, phone=None, category='General Support', m
     conn.commit()
     ticket_id = cursor.lastrowid
     conn.close()
+    
+    send_telegram_notification(f"""📩 <b>NEW SUPPORT QUERY / TICKET #{ticket_id}</b>
+👤 <b>From:</b> {name.strip()} ({email.strip().lower()})
+📱 <b>Mobile:</b> {phone or 'N/A'}
+🏷️ <b>Category:</b> {category}
+💬 <b>Query:</b> {message.strip()[:200]}
+🔗 <b>Action:</b> <a href="https://ccemock.online/admin">Reply in Admin Panel</a>""")
+    
     return True, f"Support request submitted successfully! (Ticket #{ticket_id})"
 
 def get_all_support_tickets_admin():
