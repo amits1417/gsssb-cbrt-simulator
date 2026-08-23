@@ -51,16 +51,55 @@
         </div>
     </div>
 
+    <!-- Global Activity Timeframe Filter Bar -->
+    <div class="card" style="margin-bottom: 1.75rem; background: #ffffff; border: 1.5px solid #cbd5e1; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 42px; height: 42px; background: #e0e7ff; color: var(--primary); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div>
+                <h4 style="margin: 0; font-size: 1rem; color: #0f172a;">Control Center Date Filter (તારીખ ફિલ્ટર)</h4>
+                <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">
+                    ⚡ <b>Default: Showing Last 7 Days entries.</b> Select "All Time" to view entire database records.
+                </p>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;" id="globalFilterButtonGroup">
+            <button type="button" class="btn btn-sm btn-outline global-time-btn active" onclick="applyGlobalTimeFilter('7days', this)" style="font-weight: 700;">
+                <i class="fa-solid fa-bolt"></i> Last 7 Days (Default)
+            </button>
+            <button type="button" class="btn btn-sm btn-outline global-time-btn" onclick="applyGlobalTimeFilter('today', this)">
+                <i class="fa-regular fa-sun"></i> Today
+            </button>
+            <button type="button" class="btn btn-sm btn-outline global-time-btn" onclick="applyGlobalTimeFilter('30days', this)">
+                <i class="fa-regular fa-calendar"></i> Last 30 Days
+            </button>
+            <button type="button" class="btn btn-sm btn-outline global-time-btn" onclick="applyGlobalTimeFilter('all', this)" style="font-weight: 700; background: #f8fafc;">
+                <i class="fa-solid fa-database"></i> All Time (Full History)
+            </button>
+        </div>
+    </div>
+
     <!-- Payment Requests Table -->
     <div class="card" style="margin-bottom: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3><i class="fa-solid fa-receipt" style="color: var(--accent); margin-right: 6px;"></i> Payment & UTR Submissions</h3>
-            <span style="font-size: 0.85rem; color: var(--text-muted);">{{ payments|length }} Total requests</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h3 style="margin: 0;"><i class="fa-solid fa-receipt" style="color: var(--accent); margin-right: 6px;"></i> Payment & UTR Submissions</h3>
+                <span id="paymentsCountBadge" style="font-size: 0.82rem; color: var(--primary); font-weight: 600;">Showing Last 7 Days</span>
+            </div>
+
+            <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                <button class="btn btn-outline btn-sm time-filter-btn active" data-subfilter="payments" data-range="7days" onclick="filterTableByTime('payments', '7days', this)">7 Days</button>
+                <button class="btn btn-outline btn-sm time-filter-btn" data-subfilter="payments" data-range="today" onclick="filterTableByTime('payments', 'today', this)">Today</button>
+                <button class="btn btn-outline btn-sm time-filter-btn" data-subfilter="payments" data-range="30days" onclick="filterTableByTime('payments', '30days', this)">30 Days</button>
+                <button class="btn btn-outline btn-sm time-filter-btn" data-subfilter="payments" data-range="all" onclick="filterTableByTime('payments', 'all', this)">All</button>
+            </div>
         </div>
 
         {% if payments and payments|length > 0 %}
         <div class="table-container">
-            <table class="table">
+            <table class="table" id="adminPaymentsTable">
                 <thead>
                     <tr>
                         <th>Pay ID</th>
@@ -75,7 +114,7 @@
                 </thead>
                 <tbody>
                     {% for p in payments %}
-                    <tr>
+                    <tr data-date="{{ p.created_at }}">
                         <td style="font-weight: 700; color: var(--text-muted);">#{{ p.id }}</td>
                         <td style="font-weight: 700; color: var(--dark);">
                             User #{{ p.user_id }}<br>
@@ -123,8 +162,20 @@
     <!-- All Users & 1-Click Subscription Activator -->
     <div class="card" style="margin-bottom: 2rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
-            <h3><i class="fa-solid fa-users-gear" style="color: var(--primary); margin-right: 6px;"></i> User Management & 1-Click Access Toggle</h3>
-            <input type="text" id="adminSearchUser" onkeyup="filterAdminUsers()" placeholder="Search by name, email, phone..." style="padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem; outline: none; width: 280px;">
+            <div>
+                <h3 style="margin: 0;"><i class="fa-solid fa-users-gear" style="color: var(--primary); margin-right: 6px;"></i> User Management & 1-Click Access Toggle</h3>
+                <span id="usersCountBadge" style="font-size: 0.82rem; color: var(--primary); font-weight: 600;">Showing Last 7 Days</span>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                <input type="text" id="adminSearchUser" onkeyup="filterAdminUsers()" placeholder="Search by name, email, phone..." style="padding: 0.45rem 0.85rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.85rem; outline: none; width: 220px;">
+                <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                    <button class="btn btn-outline btn-sm time-filter-btn active" data-subfilter="users" data-range="7days" onclick="filterTableByTime('users', '7days', this)">7 Days</button>
+                    <button class="btn btn-outline btn-sm time-filter-btn" data-subfilter="users" data-range="today" onclick="filterTableByTime('users', 'today', this)">Today</button>
+                    <button class="btn btn-outline btn-sm time-filter-btn" data-subfilter="users" data-range="30days" onclick="filterTableByTime('users', '30days', this)">30 Days</button>
+                    <button class="btn btn-outline btn-sm time-filter-btn" data-subfilter="users" data-range="all" onclick="filterTableByTime('users', 'all', this)">All</button>
+                </div>
+            </div>
         </div>
 
         <div class="table-container">
@@ -143,7 +194,7 @@
                 </thead>
                 <tbody>
                     {% for u in users %}
-                    <tr>
+                    <tr data-date="{{ u.created_at }}">
                         <td style="font-weight: 700; color: var(--dark);">
                             User #{{ u.id }}<br>
                             <span style="font-size: 0.72rem; color: var(--primary); font-weight: 700;">{{ u.user_uid or 'N/A' }}</span>
@@ -245,9 +296,18 @@
 
     <!-- Candidate Support Tickets Inbox -->
     <div class="card" style="margin-top: 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3 style="margin: 0;"><i class="fa-solid fa-headset" style="color: #0284c7; margin-right: 6px;"></i> Candidate Support Messages & Inbox</h3>
-            <span class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.85rem;">{{ tickets|length }} Messages</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h3 style="margin: 0;"><i class="fa-solid fa-headset" style="color: #0284c7; margin-right: 6px;"></i> Candidate Support Messages & Inbox</h3>
+                <span id="ticketsCountBadge" style="font-size: 0.82rem; color: #0284c7; font-weight: 600;">Showing Last 7 Days</span>
+            </div>
+
+            <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                <button class="btn btn-outline btn-sm time-filter-btn active" data-subfilter="tickets" data-range="7days" onclick="filterTableByTime('tickets', '7days', this)">7 Days</button>
+                <button class="btn btn-outline btn-sm time-filter-btn" data-subfilter="tickets" data-range="today" onclick="filterTableByTime('tickets', 'today', this)">Today</button>
+                <button class="btn btn-outline btn-sm time-filter-btn" data-subfilter="tickets" data-range="30days" onclick="filterTableByTime('tickets', '30days', this)">30 Days</button>
+                <button class="btn btn-outline btn-sm time-filter-btn" data-subfilter="tickets" data-range="all" onclick="filterTableByTime('tickets', 'all', this)">All</button>
+            </div>
         </div>
 
         {% if not tickets %}
@@ -257,7 +317,7 @@
         </div>
         {% else %}
         <div class="table-container">
-            <table class="table">
+            <table class="table" id="adminTicketsTable">
                 <thead>
                     <tr>
                         <th>Ticket ID</th>
@@ -272,7 +332,7 @@
                 </thead>
                 <tbody>
                     {% for t in tickets %}
-                    <tr>
+                    <tr data-date="{{ t.created_at }}">
                         <td style="font-weight: 700; color: var(--text-muted);">#{{ t.id }}</td>
                         <td style="font-weight: 700; color: var(--dark);">
                             {% set target_user_id = t.user_id or t.matched_user_id %}
@@ -885,5 +945,102 @@
             showToast('Network error', 'error');
         }
     }
+
+    // ----------------- Timeframe Date Filter Functions -----------------
+    function applyGlobalTimeFilter(range, btnElement) {
+        document.querySelectorAll('.global-time-btn').forEach(b => b.classList.remove('active'));
+        if (btnElement) btnElement.classList.add('active');
+
+        // Sync all sub-table filter buttons and apply filter
+        ['payments', 'users', 'tickets'].forEach(key => {
+            const subButtons = document.querySelectorAll(`[data-subfilter="${key}"]`);
+            subButtons.forEach(b => {
+                if (b.getAttribute('data-range') === range) {
+                    b.classList.add('active');
+                } else {
+                    b.classList.remove('active');
+                }
+            });
+            filterTableByTime(key, range);
+        });
+
+        const label = range === '7days' ? 'Last 7 Days' : (range === 'today' ? 'Today' : (range === '30days' ? 'Last 30 Days' : 'All Time'));
+        showToast(`Control center filtered: ${label}`, 'info');
+    }
+
+    function filterTableByTime(tableKey, range, btnElement) {
+        if (btnElement) {
+            const parent = btnElement.parentElement;
+            parent.querySelectorAll('.time-filter-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+        }
+
+        let tableId = '';
+        let countBadgeId = '';
+        if (tableKey === 'payments') { tableId = 'adminPaymentsTable'; countBadgeId = 'paymentsCountBadge'; }
+        else if (tableKey === 'users') { tableId = 'adminUsersTable'; countBadgeId = 'usersCountBadge'; }
+        else if (tableKey === 'tickets') { tableId = 'adminTicketsTable'; countBadgeId = 'ticketsCountBadge'; }
+
+        const table = document.getElementById(tableId);
+        if (!table) return;
+
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+
+        const rows = tbody.querySelectorAll('tr[data-date]');
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const sevenDaysAgo = now.getTime() - (7 * 24 * 60 * 60 * 1000);
+        const thirtyDaysAgo = now.getTime() - (30 * 24 * 60 * 60 * 1000);
+
+        let visibleCount = 0;
+        let totalCount = rows.length;
+
+        rows.forEach(row => {
+            const dateStr = row.getAttribute('data-date');
+            if (!dateStr || range === 'all') {
+                row.style.display = '';
+                visibleCount++;
+                return;
+            }
+
+            try {
+                // Parse date safely
+                const rowTime = new Date(dateStr.replace(' ', 'T')).getTime();
+                let show = true;
+
+                if (range === 'today') {
+                    show = (rowTime >= todayStart);
+                } else if (range === '7days') {
+                    show = (rowTime >= sevenDaysAgo);
+                } else if (range === '30days') {
+                    show = (rowTime >= thirtyDaysAgo);
+                }
+
+                if (show) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            } catch (err) {
+                row.style.display = '';
+                visibleCount++;
+            }
+        });
+
+        const badge = document.getElementById(countBadgeId);
+        if (badge) {
+            const rangeLabel = range === '7days' ? 'Last 7 Days' : (range === 'today' ? 'Today' : (range === '30days' ? 'Last 30 Days' : 'All Time'));
+            badge.innerText = `Showing ${visibleCount} of ${totalCount} (${rangeLabel})`;
+        }
+    }
+
+    // Default to Last 7 Days on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        filterTableByTime('payments', '7days');
+        filterTableByTime('users', '7days');
+        filterTableByTime('tickets', '7days');
+    });
 </script>
 {% endblock %}
