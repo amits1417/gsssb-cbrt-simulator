@@ -327,26 +327,81 @@
             container.innerHTML = '';
 
             questions.forEach((q, idx) => {
-                const uAns = userAnswers[String(q.number)] || userAnswers[idx+1];
-                const cAns = q.correct_option_index;
-                const isCorrect = uAns && parseInt(uAns) === cAns;
-                const isUnattempted = !uAns || uAns == 5;
+                const rawUAns = userAnswers[String(q.number)] || userAnswers[idx+1];
+                const uAns = (rawUAns !== null && rawUAns !== undefined && String(rawUAns).trim() !== '') ? parseInt(rawUAns) : null;
+                const cAnsIndex = q.correct_option_index;
+                const isCancelled = (cAnsIndex === -1 || cAnsIndex === null || cAnsIndex === undefined);
+                const cAns = isCancelled ? null : (cAnsIndex + 1); // 0->1(A), 1->2(B), 2->3(C), 3->4(D)
+                
+                const isUnattempted = (uAns === null || uAns === 5);
+                const isCorrect = (!isCancelled && !isUnattempted && uAns === cAns);
 
                 const qCard = document.createElement('div');
-                qCard.style.cssText = `border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; background: ${isCorrect ? '#f0fdf4' : (isUnattempted ? '#f8fafc' : '#fef2f2')};`;
+                qCard.style.cssText = `border: 1.5px solid ${isCancelled ? '#94a3b8' : (isCorrect ? 'var(--success)' : (isUnattempted ? 'var(--border)' : 'var(--danger)'))}; border-radius: var(--radius-sm); padding: 1rem; background: ${isCancelled ? '#f8fafc' : (isCorrect ? '#f0fdf4' : (isUnattempted ? '#ffffff' : '#fef2f2'))}; margin-bottom: 0.75rem;`;
                 
+                // Render All Options (A, B, C, D)
+                let optionsHtml = '';
+                const opts = q.options || [];
+                if (opts.length > 0) {
+                    optionsHtml = '<div style="display: flex; flex-direction: column; gap: 6px; margin: 10px 0;">';
+                    opts.forEach((opt, oIdx) => {
+                        const optNum = oIdx + 1;
+                        const optLetter = String.fromCharCode(64 + optNum);
+                        const isThisCorrect = (!isCancelled && cAns === optNum);
+                        const isThisChosen = (uAns === optNum);
+
+                        let optBorder = '#e2e8f0';
+                        let optBg = '#ffffff';
+                        let badgeHtml = '';
+
+                        if (isThisCorrect && isThisChosen) {
+                            optBorder = '#16a34a';
+                            optBg = '#dcfce7';
+                            badgeHtml = `<span style="background: #16a34a; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; margin-left: auto;"><i class="fa-solid fa-circle-check"></i> Correct & Selected</span>`;
+                        } else if (isThisCorrect) {
+                            optBorder = '#16a34a';
+                            optBg = '#f0fdf4';
+                            badgeHtml = `<span style="background: #16a34a; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; margin-left: auto;"><i class="fa-solid fa-check"></i> Correct Answer</span>`;
+                        } else if (isThisChosen) {
+                            optBorder = '#dc2626';
+                            optBg = '#fee2e2';
+                            badgeHtml = `<span style="background: #dc2626; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; margin-left: auto;"><i class="fa-solid fa-xmark"></i> Your Selection (Wrong)</span>`;
+                        }
+
+                        optionsHtml += `
+                            <div style="display: flex; align-items: center; gap: 8px; border: 1.5px solid ${optBorder}; background: ${optBg}; padding: 8px 12px; border-radius: var(--radius-sm);">
+                                <strong style="font-size: 0.9rem; color: var(--dark); min-width: 22px;">${optLetter}.</strong>
+                                ${opt.path ? `<img src="/${opt.path}" style="max-height: 44px; max-width: 80%; vertical-align: middle;">` : `<span style="font-size: 0.9rem; color: var(--dark);">${opt.text || ('Option ' + optLetter)}</span>`}
+                                ${badgeHtml}
+                            </div>
+                        `;
+                    });
+                    optionsHtml += '</div>';
+                }
+
+                let statusBadgeText = '';
+                if (isCancelled) {
+                    statusBadgeText = `<span style="color: #475569; background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700;"><i class="fa-solid fa-triangle-exclamation"></i> Cancelled (0.00)</span>`;
+                } else if (isCorrect) {
+                    statusBadgeText = `<span style="color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Correct (+1.00)</span>`;
+                } else if (isUnattempted) {
+                    statusBadgeText = `<span style="color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700;">— Unattempted (0.00)</span>`;
+                } else {
+                    statusBadgeText = `<span style="color: #b91c1c; background: #fee2e2; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700;"><i class="fa-solid fa-circle-xmark"></i> Incorrect (-0.25)</span>`;
+                }
+
                 qCard.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 0.5rem;">
-                        <span>Q.${q.number}</span>
-                        <span style="font-size: 0.85rem; color: ${isCorrect ? 'var(--success)' : (isUnattempted ? 'var(--text-muted)' : 'var(--danger)')};">
-                            ${isCorrect ? '<i class="fa-solid fa-circle-check"></i> Correct (+1.0)' : (isUnattempted ? '<i class="fa-solid fa-circle-minus"></i> Unattempted (0.0)' : '<i class="fa-solid fa-circle-xmark"></i> Incorrect (-0.25)')}
-                        </span>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 4px;">
+                        <span>Question No. ${q.number}</span>
+                        ${statusBadgeText}
                     </div>
-                    <div style="font-size: 0.95rem; margin-bottom: 0.75rem; white-space: pre-line;">${q.english_prompt || ''}</div>
-                    ${q.gujarati_prompt_path ? `<img src="/${q.gujarati_prompt_path}" style="max-width: 100%; border-radius: 4px; margin-bottom: 0.75rem; border: 1px solid var(--border);">` : ''}
-                    <div style="font-size: 0.85rem; font-weight: 600; display: flex; gap: 1.5rem; flex-wrap: wrap;">
-                        <span>Your Answer: <strong style="color: ${isCorrect ? 'var(--success)' : (isUnattempted ? 'var(--text-muted)' : 'var(--danger)')};">${uAns == 5 ? 'E (Not Attempted)' : (uAns ? 'Option ' + String.fromCharCode(64 + parseInt(uAns)) : 'None')}</strong></span>
-                        <span>Correct Answer: <strong style="color: var(--success);">Option ${String.fromCharCode(64 + parseInt(cAns))}</strong></span>
+                    ${(q.english_prompt && q.english_prompt.trim() !== 'Yes') ? `<div style="font-size: 0.95rem; margin-bottom: 0.6rem; white-space: pre-line; color: var(--dark);">${q.english_prompt}</div>` : ''}
+                    ${q.gujarati_prompt_path ? `<img src="/${q.gujarati_prompt_path}" style="max-width: 100%; border-radius: 4px; margin-bottom: 0.6rem; border: 1px solid var(--border);">` : ''}
+                    ${optionsHtml}
+                    ${uAns === 5 ? `<div style="padding: 6px 10px; background: #f1f5f9; border-radius: 4px; font-size: 0.8rem; color: #475569; margin: 6px 0;"><strong>Selected Option E</strong> (Not Attempted - 0.00 Marks)</div>` : ''}
+                    <div style="font-size: 0.85rem; font-weight: 600; display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(0,0,0,0.1);">
+                        <span>Your Answer: <strong style="color: ${isCorrect ? 'var(--success)' : (isUnattempted ? 'var(--text-muted)' : 'var(--danger)')};">${uAns == 5 ? 'Option E (Not Attempted)' : (uAns ? 'Option ' + String.fromCharCode(64 + uAns) : 'None (Unattempted)')}</strong></span>
+                        <span>Correct Answer: <strong style="color: var(--success);">${isCancelled ? 'Discrepancy / Cancelled' : (cAns ? 'Option ' + String.fromCharCode(64 + cAns) : 'N/A')}</strong></span>
                     </div>
                 `;
                 container.appendChild(qCard);

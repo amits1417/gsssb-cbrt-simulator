@@ -490,21 +490,28 @@ def api_submit_exam():
     for q in questions:
         q_num = str(q['number'])
         user_ans = user_answers.get(q_num) or user_answers.get(int(q_num))
-        correct_ans = q.get('correct_option_index')
+        correct_ans_index = q.get('correct_option_index')
         
         status = 'unattempted'
         is_correct = False
+        is_cancelled = (correct_ans_index == -1 or correct_ans_index is None)
         
-        if user_ans is None or user_ans == 5 or user_ans == '5': # 5 is option E (Not Attempted)
+        if is_cancelled:
             unattempted_count += 1
-            status = 'unattempted'
-        elif int(user_ans) == correct_ans:
-            correct_count += 1
-            is_correct = True
-            status = 'correct'
+            status = 'cancelled'
+            correct_ans_1_based = None
         else:
-            incorrect_count += 1
-            status = 'incorrect'
+            correct_ans_1_based = correct_ans_index + 1  # 0->1(A), 1->2(B), 2->3(C), 3->4(D)
+            if user_ans is None or user_ans == 5 or user_ans == '5' or str(user_ans) == '':
+                unattempted_count += 1
+                status = 'unattempted'
+            elif int(user_ans) == correct_ans_1_based:
+                correct_count += 1
+                is_correct = True
+                status = 'correct'
+            else:
+                incorrect_count += 1
+                status = 'incorrect'
             
         review_list.append({
             'number': q['number'],
@@ -512,8 +519,9 @@ def api_submit_exam():
             'english_prompt': q.get('english_prompt', ''),
             'gujarati_prompt_path': q.get('gujarati_prompt_path', ''),
             'options': q.get('options', []),
-            'user_ans': user_ans,
-            'correct_ans': correct_ans,
+            'user_ans': int(user_ans) if (user_ans is not None and str(user_ans).isdigit()) else None,
+            'correct_ans': correct_ans_1_based,
+            'is_cancelled': is_cancelled,
             'status': status,
             'is_correct': is_correct
         })
