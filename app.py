@@ -88,7 +88,79 @@ def auth_page():
     user = get_current_user()
     if user:
         return redirect(url_for('dashboard'))
-    return render_template('auth.html')
+    google_client_id = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+    return render_template('auth.html', google_client_id=google_client_id)
+
+@app.route('/auth/google')
+def auth_google_redirect():
+    google_client_id = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+    if not google_client_id:
+        return redirect('/auth?error=google_not_configured')
+    
+    redirect_uri = url_for('auth_google_callback', _external=True)
+    import urllib.parse
+    google_url = (
+        f"https://accounts.google.com/o/oauth2/v2/auth?"
+        f"client_id={urllib.parse.quote(google_client_id)}&"
+        f"response_type=code&"
+        f"scope=openid%20email%20profile&"
+        f"redirect_uri={urllib.parse.quote(redirect_uri)}&"
+        f"prompt=select_account"
+    )
+    return redirect(google_url)
+
+@app.route('/auth/google/callback')
+def auth_google_callback():
+    code = request.args.get('code')
+    error = request.args.get('error')
+    google_client_id = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+    google_client_secret = os.environ.get('GOOGLE_CLIENT_SECRET', '').strip()
+    
+    if error or not code or not google_client_id or not google_client_secret:
+        return redirect('/auth?error=google_failed')
+        
+    try:
+        import urllib.request, urllib.parse, json
+        # 1. Exchange code for access token
+        token_url = "https://oauth2.googleapis.com/token"
+        token_data = urllib.parse.urlencode({
+            'code': code,
+            'client_id': google_client_id,
+            'client_secret': google_client_secret,
+            'redirect_uri': url_for('auth_google_callback', _external=True),
+            'grant_type': 'authorization_code'
+        }).encode('utf-8')
+        
+        req = urllib.request.Request(token_url, data=token_data, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            token_resp = json.loads(resp.read().decode('utf-8'))
+            
+        access_token = token_resp.get('access_token')
+        if not access_token:
+            return redirect('/auth?error=google_failed')
+            
+        # 2. Get User profile from Google
+        userinfo_req = urllib.request.Request("https://www.googleapis.com/oauth2/v2/userinfo", headers={'Authorization': f'Bearer {access_token}'})
+        with urllib.request.urlopen(userinfo_req, timeout=10) as resp:
+            user_info = json.loads(resp.read().decode('utf-8'))
+            
+        email = user_info.get('email')
+        name = user_info.get('name') or email.split('@')[0]
+        
+        if not email:
+            return redirect('/auth?error=google_failed')
+            
+        device_info = request.headers.get('User-Agent', 'Google OAuth')
+        ip_addr = request.headers.get('X-Forwarded-For', request.remote_addr)
+        
+        res = db.authenticate_google_user(email, name, None, device_info, ip_addr)
+        if res.get('status') == 'OK':
+            session['session_token'] = res['token']
+            return redirect('/dashboard')
+        else:
+            return redirect('/auth?error=' + urllib.parse.quote(res.get('message', 'Login failed')))
+    except Exception:
+        return redirect('/auth?error=google_failed')
 
 @app.route('/dashboard')
 @login_required
@@ -168,27 +240,69 @@ def api_signup():
     email = data.get('email', '').strip().lower()
     phone = data.get('phone', '').strip()
     password = data.get('password', '').strip()
-    
-    if not name or not email or not password:
-        return jsonify({'error': 'Name, email, and password are required.'}), 400
-        
-    if not phone or len(phone) < 10 or not phone.isdigit():
-        return jsonify({'error': 'A valid 10-digit mobile number is compulsory.'}), 400
-        
-    if len(password) < 6:
-        return jsonify({'error': 'Password must be at least 6 characters.'}), 400
-        
     device_id = data.get('device_id')
-    user, result = db.create_user(name, email, phone, password, device_id)
+    
+    if not name:
+        return jsonify({'error': 'Full Name is compulsory / નામ દાખલ કરવું ફરજિયાત છે.'}), 400
+    if not email or '@' not in email:
+        return jsonify({'error': 'A valid Email Address is compulsory / માન્ય ઈમેલ દાખલ કરવો ફરજિયાત છે.'}), 400
+    if not phone or len(phone) != 10 or not phone.isdigit():
+        return jsonify({'error': 'A valid 10-digit Mobile Number is compulsory / ૧૦ આંકડાનો મોબાઈલ નંબર ફરજિયાત છે.'}), 400
+    if not password or len(password) < 6:
+        return jsonify({'error': 'Password must be at least 6 characters / પાસવર્ડ ઓછામાં ઓછો ૬ અક્ષરનો હોવો જોઈએ.'}), 400
+
+    user, token_or_err = db.create_user(name, email, phone, password, device_id)
     if not user:
-        return jsonify({'error': result}), 400
+        return jsonify({'error': token_or_err}), 400
         
-    session['session_token'] = result
+    session['session_token'] = token_or_err
     return jsonify({
         'success': True,
-        'message': 'Account created successfully!',
+        'message': 'Account created successfully! Welcome to GSSSB Mock Tests.',
         'user': user,
-        'token': result
+        'token': token_or_err
+    })
+
+@app.route('/api/auth/forgot-password/request', methods=['POST'])
+def api_forgot_password_request():
+    data = request.get_json() or {}
+    email = data.get('email', '').strip().lower()
+    if not email:
+        return jsonify({'error': 'Please enter your registered email address / કૃપા કરીને તમારો રજીસ્ટર્ડ ઈમેલ દાખલ કરો.'}), 400
+        
+    result = db.request_forgot_password_otp(email)
+    if result['status'] == 'ERROR':
+        return jsonify({'error': result['message']}), 400
+        
+    return jsonify({
+        'success': True,
+        'message': result['message'],
+        'dev_otp': result.get('dev_otp')
+    })
+
+@app.route('/api/auth/forgot-password/reset', methods=['POST'])
+def api_forgot_password_reset():
+    data = request.get_json() or {}
+    email = data.get('email', '').strip().lower()
+    otp = data.get('otp', '').strip()
+    new_password = data.get('new_password', '').strip()
+    device_id = data.get('device_id')
+    device_info = data.get('device_info', request.headers.get('User-Agent', 'Web Browser'))
+    ip_addr = request.headers.get('X-Forwarded-For', request.remote_addr)
+    
+    if not email or not otp or not new_password:
+        return jsonify({'error': 'Email, OTP, and New Password are required.'}), 400
+        
+    result = db.reset_password_with_otp(email, otp, new_password, device_id, device_info, ip_addr)
+    if result['status'] == 'ERROR':
+        return jsonify({'error': result['message']}), 400
+        
+    session['session_token'] = result['token']
+    return jsonify({
+        'success': True,
+        'message': 'Password reset successfully! Logging you in...',
+        'user': result['user'],
+        'token': result['token']
     })
 
 @app.route('/api/auth/login', methods=['POST'])
@@ -246,6 +360,42 @@ def api_verify_otp():
         'message': 'Device authorized! Logged in successfully.',
         'user': result['user'],
         'token': result['token']
+    })
+
+@app.route('/api/auth/google', methods=['POST'])
+def api_auth_google():
+    data = request.get_json() or {}
+    token = data.get('credential') or data.get('token')
+    email = data.get('email', '').strip().lower()
+    name = data.get('name', '').strip()
+    device_id = data.get('device_id')
+    device_info = data.get('device_info', request.headers.get('User-Agent', 'Web Browser'))
+    ip_addr = request.headers.get('X-Forwarded-For', request.remote_addr)
+
+    if token:
+        try:
+            import urllib.request, json
+            verify_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={token}"
+            with urllib.request.urlopen(verify_url, timeout=10) as resp:
+                token_info = json.loads(resp.read().decode('utf-8'))
+                email = token_info.get('email', '').strip().lower()
+                name = token_info.get('name') or email.split('@')[0]
+        except Exception:
+            return jsonify({'error': 'Invalid Google token credentials'}), 400
+
+    if not email:
+        return jsonify({'error': 'Google authentication failed: Email is required.'}), 400
+
+    res = db.authenticate_google_user(email, name, device_id, device_info, ip_addr)
+    if res.get('status') == 'ERROR':
+        return jsonify({'error': res.get('message', 'Login blocked')}), 401
+
+    session['session_token'] = res['token']
+    return jsonify({
+        'success': True,
+        'message': 'Google Sign-In successful!',
+        'user': res['user'],
+        'token': res['token']
     })
 
 @app.route('/api/auth/resend-otp', methods=['POST'])

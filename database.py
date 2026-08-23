@@ -296,6 +296,55 @@ def authenticate_user(email, password, device_id=None, device_info=None, ip_addr
     
     return {'status': 'OK', 'user': user, 'token': new_session_token}
 
+def authenticate_google_user(email, name, device_id=None, device_info=None, ip_address=None):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    email_clean = email.strip().lower()
+    
+    cursor.execute('SELECT * FROM users WHERE email = ?', (email_clean,))
+    row = cursor.fetchone()
+    
+    new_session_token = str(uuid.uuid4())
+    now_str = datetime.datetime.now().isoformat()
+    device_to_set = device_id or str(uuid.uuid4())
+    
+    if row:
+        user = dict(row)
+        trusted = user.get('trusted_device_id')
+        is_admin = user.get('is_admin')
+        if (device_id and trusted and trusted != device_id) and not is_admin:
+            conn.close()
+            return {
+                'status': 'ERROR',
+                'message': '🔒 Multi-Device Login Blocked: This account is registered on another device.'
+            }
+        
+        cursor.execute('''
+            UPDATE users
+            SET current_session_token = ?, current_device_id = ?, last_ip = ?, last_active = ?, device_info = ?
+            WHERE id = ?
+        ''', (new_session_token, device_to_set, ip_address or '127.0.0.1', now_str, device_info or 'Google Auth', user['id']))
+        conn.commit()
+        user['current_session_token'] = new_session_token
+        user.pop('password_hash', None)
+        conn.close()
+        return {'status': 'OK', 'user': user, 'token': new_session_token}
+    else:
+        # Create user for first-time Google sign in
+        pw_hash = generate_password_hash(str(uuid.uuid4()))
+        user_uid = _generate_user_uid()
+        cursor.execute('''
+            INSERT INTO users (name, email, phone, password_hash, current_session_token, current_device_id, trusted_device_id, user_uid, last_active, device_info, last_ip)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (name.strip() or email_clean.split('@')[0], email_clean, '', pw_hash, new_session_token, device_to_set, device_to_set, user_uid, now_str, device_info or 'Google Auth', ip_address or '127.0.0.1'))
+        user_id = cursor.lastrowid
+        conn.commit()
+        cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
+        user = dict(cursor.fetchone())
+        user.pop('password_hash', None)
+        conn.close()
+        return {'status': 'OK', 'user': user, 'token': new_session_token}
+
 def _generate_otp():
     import random
     return str(random.randint(100000, 999999))
@@ -481,6 +530,75 @@ def verify_otp_and_login(email, otp, device_id=None, device_info=None, ip_addres
     user.pop('password_hash', None)
     conn.close()
     return {'status': 'OK', 'user': user, 'token': new_session_token}
+
+def request_forgot_password_otp(email):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    email_clean = email.strip().lower()
+    cursor.execute('SELECT * FROM users WHERE email = ?', (email_clean,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return {'status': 'ERROR', 'message': 'No account found with this email address (આ ઈમેલ સાથે કોઈ ખાતું મળ્યું નથી).'}
+    
+    user = dict(row)
+    otp = _generate_otp()
+    _store_otp(cursor, conn, user['id'], otp)
+    
+    dev_otp = _send_email_otp(user['email'], otp, user.get('name'))
+    conn.close()
+    return {'status': 'OK', 'message': f'6-Digit Password Reset OTP has been sent to {user["email"]}.', 'dev_otp': dev_otp}
+
+def reset_password_with_otp(email, otp, new_password, device_id=None, device_info=None, ip_address=None):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    email_clean = email.strip().lower()
+    otp_clean = str(otp).strip()
+    
+    if not new_password or len(new_password) < 6:
+        conn.close()
+        return {'status': 'ERROR', 'message': 'New password must be at least 6 characters long.'}
+    
+    cursor.execute('SELECT * FROM users WHERE email = ?', (email_clean,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return {'status': 'ERROR', 'message': 'Account not found.'}
+        
+    user = dict(row)
+    stored_otp = user.get('otp_code')
+    expires_at = user.get('otp_expires_at')
+    
+    if not stored_otp or str(stored_otp).strip() != otp_clean:
+        conn.close()
+        return {'status': 'ERROR', 'message': 'Invalid OTP code. Please check your email and try again.'}
+        
+    if expires_at:
+        try:
+            if datetime.datetime.now() > datetime.datetime.fromisoformat(expires_at):
+                conn.close()
+                return {'status': 'ERROR', 'message': 'OTP has expired. Please request a new one.'}
+        except:
+            pass
+        
+    new_pw_hash = generate_password_hash(new_password)
+    new_session = str(uuid.uuid4())
+    now_str = datetime.datetime.now().isoformat()
+    device_to_set = device_id or user.get('trusted_device_id') or str(uuid.uuid4())
+    
+    cursor.execute('''
+        UPDATE users
+        SET password_hash = ?, otp_code = NULL, otp_expires_at = NULL,
+            current_session_token = ?, current_device_id = ?, last_active = ?, last_ip = ?, device_info = ?
+        WHERE id = ?
+    ''', (new_pw_hash, new_session, device_to_set, now_str, ip_address or '127.0.0.1', device_info or 'Web Browser', user['id']))
+    conn.commit()
+    
+    cursor.execute('SELECT * FROM users WHERE id = ?', (user['id'],))
+    updated_user = dict(cursor.fetchone())
+    updated_user.pop('password_hash', None)
+    conn.close()
+    return {'status': 'OK', 'user': updated_user, 'token': new_session}
 
 
 def google_auth_user(email, name, google_id=None, avatar_url=None, phone=None, device_info=None, ip_address=None, device_id=None):
