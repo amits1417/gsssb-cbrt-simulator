@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GSSSB CCE Exam Simulator - {{ paper_id }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/exam.css">
+    <link rel="stylesheet" href="/static/css/exam.css?v=20260905_v8">
 
     <!-- Google tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-SR5Q94MB23"></script>
@@ -36,6 +36,180 @@
             border: 1px solid #e2e8f0;
             padding: 30px;
         }
+
+        .btn-text-short {
+            display: none;
+        }
+        .btn-text-full {
+            display: inline;
+        }
+
+        /* Desktop Mode (>900px) */
+        @media (min-width: 901px) {
+            .top-quick-actions {
+                display: none !important;
+            }
+            .question-inline-actions {
+                display: none !important;
+            }
+            .exam-footer {
+                display: flex !important;
+            }
+        }
+
+        /* Mobile Mode (<=900px) - Action buttons positioned high up right below Option E */
+        @media (max-width: 900px) {
+            html, body {
+                height: 100% !important;
+                height: 100dvh !important;
+                width: 100vw !important;
+                overflow: hidden !important;
+                position: fixed !important;
+                inset: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .exam-header {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                height: 48px !important;
+                z-index: 1000 !important;
+                padding: 0 10px !important;
+            }
+
+            .main-container {
+                position: fixed !important;
+                top: 48px !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                height: calc(100dvh - 48px) !important;
+                display: flex !important;
+                overflow: hidden !important;
+                background: #ffffff !important;
+            }
+
+            .question-panel {
+                flex: 1 1 100% !important;
+                width: 100% !important;
+                height: 100% !important;
+                border-right: none !important;
+                padding: 6px 10px 30px 10px !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            .question-content {
+                flex-grow: 0 !important;
+                margin-bottom: 0 !important;
+            }
+
+            .question-img-guj {
+                max-height: 180px !important;
+                max-width: 100% !important;
+                object-fit: contain !important;
+                margin: 4px 0 !important;
+            }
+
+            .options-container {
+                gap: 6px !important;
+                margin-top: 6px !important;
+            }
+
+            .option-row {
+                padding: 7px 10px !important;
+                gap: 6px !important;
+                min-height: 36px !important;
+            }
+
+            .option-img {
+                max-height: 32px !important;
+            }
+
+            .top-quick-actions {
+                display: flex !important;
+                margin-bottom: 8px !important;
+            }
+
+            .question-inline-actions {
+                display: flex !important;
+                margin-top: 10px !important;
+                margin-bottom: 25px !important;
+            }
+
+            /* Hide separate bottom footer on mobile completely */
+            .exam-footer,
+            footer.exam-footer {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                min-height: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+            }
+
+            .sidebar-panel {
+                position: fixed !important;
+                top: 0 !important;
+                right: -360px !important;
+                width: 320px !important;
+                max-width: 88vw !important;
+                height: 100% !important;
+                height: 100dvh !important;
+                z-index: 2000 !important;
+                background: #ffffff !important;
+                box-shadow: -5px 0 25px rgba(0,0,0,0.3) !important;
+                transition: right 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            .sidebar-panel.open {
+                right: 0 !important;
+            }
+
+            .palette-backdrop {
+                z-index: 1900 !important;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .btn-text-full {
+                display: none !important;
+            }
+            .btn-text-short {
+                display: inline !important;
+            }
+            .footer-row-mobile .btn-tcs {
+                font-size: 11.5px !important;
+                padding: 8px 3px !important;
+                gap: 4px !important;
+            }
+            #btnSaveNext {
+                font-size: 12px !important;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .footer-row-mobile .btn-tcs {
+                font-size: 10.5px !important;
+                padding: 7px 2px !important;
+                gap: 3px !important;
+            }
+            #btnSaveNext {
+                font-size: 11px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -54,13 +228,18 @@
                 </div>
             </div>
             
-            <div class="inst-candidate-info">
-                <div class="inst-candidate-avatar">
-                    <i class="fa-solid fa-user"></i>
-                </div>
-                <div style="font-size: 12.5px;">
-                    <div style="font-weight: 700; color: #1e293b;">{{ user.name if user else 'Candidate / ઉમેદવાર' }}</div>
-                    <div style="color: #64748b;">Paper: {{ paper_id }} &bull; System: C001</div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
+                <button type="button" onclick="beginActualExam()" class="btn-tcs btn-tcs-success" style="padding: 8px 16px; font-weight: 800; font-size: 13.5px; border-radius: 6px; box-shadow: 0 2px 10px rgba(22,163,74,0.35); cursor: pointer;">
+                    <i class="fa-solid fa-play"></i> Start Exam / પરીક્ષા શરૂ કરો
+                </button>
+                <div class="inst-candidate-info hide-xs">
+                    <div class="inst-candidate-avatar">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div style="font-size: 12.5px;">
+                        <div style="font-weight: 700; color: #1e293b;">{{ user.name if user else 'Candidate / ઉમેદવાર' }}</div>
+                        <div style="color: #64748b;">Paper: {{ paper_id }} &bull; System: C001</div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -218,7 +397,7 @@
                 <!-- Declaration & Confirmation Checkbox Area -->
                 <div class="inst-declaration-box">
                     <label class="inst-checkbox-label">
-                        <input type="checkbox" id="chkAgreeInstructions" onchange="toggleStartExamBtn(this.checked)">
+                        <input type="checkbox" id="chkAgreeInstructions" checked onchange="toggleStartExamBtn(this.checked)">
                         <span>
                             <strong>I have read and understood all the instructions above.</strong> I declare that all hardware/system allocated to me are working properly. I agree to abide by all the examination rules and guidelines.<br>
                             <span style="color: #1e3a8a; font-size: 13px;">(મેં ઉપરોક્ત તમામ સૂચનાઓ ધ્યાનપૂર્વક વાંચી અને સમજી લીધી છે. હું પરીક્ષાના તમામ નિયમોનું પાલન કરવા સંમત છું.)</span>
@@ -231,7 +410,7 @@
                     <a href="/" class="btn-tcs btn-default" style="padding: 10px 20px; font-size: 14px; text-decoration: none;">
                         <i class="fa-solid fa-arrow-left"></i> Back to Portal (પાછા જાઓ)
                     </a>
-                    <button type="button" id="btnStartExam" onclick="beginActualExam()" class="btn-start-exam" disabled>
+                    <button type="button" id="btnStartExam" onclick="beginActualExam()" class="btn-start-exam">
                         <i class="fa-solid fa-play"></i> I am ready to begin / પરીક્ષા શરૂ કરો
                     </button>
                 </div>
@@ -274,6 +453,22 @@
                 <span id="qNumberTitle" style="font-weight: 700; font-size: 16px; color: #2c3e50;">Question No. 1</span>
                 <span style="font-size: 13px; color: #7f8c8d;">Marks: Correct +1.0 | Wrong -0.25</span>
             </div>
+
+            <!-- TOP QUICK ACTION BAR (Immediately visible above the question - No scrolling needed) -->
+            <div class="top-quick-actions" style="margin-bottom: 12px; padding: 6px 8px; background: #f0f9ff; border: 1.5px solid #bae6fd; border-radius: 8px; display: flex; gap: 6px; align-items: center; justify-content: space-between; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+                <button type="button" onclick="previousQuestion()" class="btn-tcs btn-default" style="padding: 7px 9px; font-size: 12px; font-weight: 700; border-radius: 5px;" title="Previous Question">
+                    <i class="fa-solid fa-chevron-left"></i> Prev
+                </button>
+                <button type="button" onclick="clearResponse()" class="btn-tcs btn-default" style="padding: 7px 9px; font-size: 12px; font-weight: 700; border-radius: 5px;" title="Clear Selection">
+                    <i class="fa-solid fa-eraser"></i> Clear
+                </button>
+                <button type="button" onclick="markForReviewAndNext()" class="btn-tcs btn-tcs-purple" style="padding: 7px 10px; font-size: 12px; font-weight: 700; border-radius: 5px;" title="Mark for Review & Next">
+                    <i class="fa-regular fa-bookmark"></i> Mark
+                </button>
+                <button type="button" onclick="saveAndNext()" class="btn-tcs btn-tcs-primary" style="padding: 8px 14px; font-size: 13.5px; font-weight: 800; border-radius: 5px; box-shadow: 0 2px 8px rgba(37,99,235,0.35);" title="Save & Next Question">
+                    <i class="fa-solid fa-floppy-disk"></i> Save & Next
+                </button>
+            </div>
             
             <div class="question-content">
                 <!-- English Text Prompt -->
@@ -282,7 +477,7 @@
                 <img class="question-img-guj" id="qImgGuj" src="" alt="Question prompt Gujarati" style="display: none;">
                 
                 <!-- Option Rows -->
-                <div class="options-container" style="margin-top: 20px;">
+                <div class="options-container">
                     <div class="option-row" id="optRow_1">
                         <input type="radio" name="examOption" id="optRadio_1" value="1">
                         <div class="option-text-container">
@@ -321,6 +516,29 @@
                             <span class="option-num">E.</span>
                             <span style="font-weight: bold; font-size: 15px; color: #eb3b5a; margin-left: 8px;">Not Attempted (અનએટેમ્પ્ટેડ)</span>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Inline Action Buttons directly beneath Option E (Guaranteed visible in mobile scroll flow) -->
+                <div class="question-inline-actions">
+                    <div style="display: flex; gap: 8px; width: 100%;">
+                        <button type="button" class="btn-tcs btn-tcs-purple" onclick="markForReviewAndNext()" style="flex: 1.2; padding: 10px 8px; font-size: 13px; font-weight: 700; border-radius: 6px;">
+                            <i class="fa-regular fa-bookmark"></i> Mark for Review & Next
+                        </button>
+                        <button type="button" class="btn-tcs btn-default" onclick="clearResponse()" style="flex: 1; padding: 10px 8px; font-size: 13px; font-weight: 700; border-radius: 6px;">
+                            <i class="fa-solid fa-eraser"></i> Clear Response
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 8px; width: 100%;">
+                        <button type="button" class="btn-tcs btn-default" onclick="previousQuestion()" style="flex: 0.85; padding: 11px 8px; font-size: 13px; font-weight: 700; border-radius: 6px;">
+                            <i class="fa-solid fa-chevron-left"></i> Previous
+                        </button>
+                        <button type="button" class="btn-tcs btn-tcs-primary" onclick="saveAndNext()" style="flex: 1.4; padding: 12px 10px; font-size: 14px; font-weight: 800; border-radius: 6px; box-shadow: 0 4px 12px rgba(37,99,235,0.35);">
+                            <i class="fa-solid fa-floppy-disk"></i> Save & Next (સાચવો)
+                        </button>
+                        <button type="button" class="btn-tcs btn-tcs-success" onclick="showSubmitModal()" style="flex: 1.1; padding: 11px 8px; font-size: 13px; font-weight: 700; border-radius: 6px;">
+                            <i class="fa-solid fa-paper-plane"></i> Submit
+                        </button>
                     </div>
                 </div>
             </div>
@@ -387,21 +605,21 @@
     <footer class="exam-footer">
         <div class="footer-row-mobile footer-left">
             <button class="btn-tcs btn-tcs-purple" id="btnMarkNext" title="Mark for review and proceed">
-                <i class="fa-regular fa-bookmark"></i> Mark for Review & Next
+                <i class="fa-regular fa-bookmark"></i> <span class="btn-text-full">Mark for Review & Next</span><span class="btn-text-short">Mark & Next</span>
             </button>
             <button class="btn-tcs btn-default" id="btnClear" title="Clear selected option">
-                <i class="fa-solid fa-eraser"></i> Clear Response
+                <i class="fa-solid fa-eraser"></i> <span class="btn-text-full">Clear Response</span><span class="btn-text-short">Clear</span>
             </button>
         </div>
         <div class="footer-row-mobile footer-right">
             <button class="btn-tcs btn-default btn-prev" id="btnPrev" title="Go to previous question">
-                <i class="fa-solid fa-chevron-left"></i> Previous
+                <i class="fa-solid fa-chevron-left"></i> <span class="btn-text-full">Previous</span><span class="btn-text-short">Prev</span>
             </button>
             <button class="btn-tcs btn-tcs-primary" id="btnSaveNext" title="Save answer and proceed">
-                <i class="fa-solid fa-floppy-disk"></i> Save & Next
+                <i class="fa-solid fa-floppy-disk"></i> <span>Save & Next</span>
             </button>
             <button class="btn-tcs btn-tcs-success" id="btnSubmit" title="Submit completed exam">
-                <i class="fa-solid fa-paper-plane"></i> Submit Exam
+                <i class="fa-solid fa-paper-plane"></i> <span class="btn-text-full">Submit Exam</span><span class="btn-text-short">Submit</span>
             </button>
         </div>
     </footer>
