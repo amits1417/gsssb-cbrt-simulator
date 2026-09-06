@@ -121,16 +121,37 @@ function initExamState() {
     }, 1000);
 }
 
+function togglePaletteDrawer(show) {
+    const sidebar = document.getElementById("sidebarPanel");
+    const backdrop = document.getElementById("paletteBackdrop");
+    if (!sidebar) return;
+    if (show === undefined) {
+        const isOpen = sidebar.classList.toggle("open");
+        if (backdrop) backdrop.classList.toggle("active", isOpen);
+    } else if (show) {
+        sidebar.classList.add("open");
+        if (backdrop) backdrop.classList.add("active");
+    } else {
+        sidebar.classList.remove("open");
+        if (backdrop) backdrop.classList.remove("active");
+    }
+}
+
 function buildPaletteGrid() {
     const grid = document.getElementById("paletteGrid");
+    if (!grid) return;
     grid.innerHTML = "";
     
     questions.forEach((q, idx) => {
         const btn = document.createElement("button");
+        btn.type = "button";
         btn.id = `palBtn_${idx}`;
         btn.className = "palette-btn not-visited";
         btn.innerText = idx + 1;
-        btn.addEventListener("click", () => jumpToQuestion(idx));
+        btn.onclick = function(e) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            jumpToQuestion(idx);
+        };
         grid.appendChild(btn);
     });
     
@@ -138,6 +159,7 @@ function buildPaletteGrid() {
 }
 
 function updatePaletteDisplay() {
+    let answered = 0;
     questions.forEach((q, idx) => {
         const btn = document.getElementById(`palBtn_${idx}`);
         if (!btn) return;
@@ -148,6 +170,7 @@ function updatePaletteDisplay() {
         // Add active status class
         const status = statuses[idx];
         btn.classList.add(status);
+        if (status === "answered" || status === "marked-answered") answered++;
         
         // Add active class highlight
         if (idx === currentIndex) {
@@ -158,6 +181,8 @@ function updatePaletteDisplay() {
             btn.style.fontWeight = "";
         }
     });
+    const badge = document.getElementById("paletteAnsweredBadge");
+    if (badge) badge.innerText = answered;
 }
 
 function loadQuestion(index) {
@@ -245,6 +270,7 @@ function jumpToQuestion(index) {
     // Save state of current question if it was answered
     saveState();
     loadQuestion(index);
+    togglePaletteDrawer(false); // Auto-close drawer on mobile
 }
 
 function saveState() {

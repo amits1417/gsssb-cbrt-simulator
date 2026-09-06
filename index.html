@@ -8,7 +8,7 @@
     <meta http-equiv="Expires" content="0">
     <title>GSSSB Online CBRT Practice Exam</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="exam.css?v=20260905_v10">
+    <link rel="stylesheet" href="exam.css?v=20260906_v11">
     <style>
         /* Desktop Mode (>900px) */
         @media (min-width: 901px) {
@@ -164,6 +164,9 @@
                 <h2 id="headerSubjectTitle">GSSSB Combined Competitive Exam (Class-III)</h2>
             </div>
             <div class="header-right">
+                <button type="button" class="palette-toggle-btn" id="btnTogglePalette" title="Open Question Palette" onclick="togglePaletteDrawer()">
+                    <i class="fa-solid fa-table-cells"></i> <span class="hide-xs">Questions</span> (<span id="paletteAnsweredBadge">0</span>/100)
+                </button>
                 <div class="timer-box" id="timer">Time Left: 60:00</div>
             </div>
         </header>
@@ -254,17 +257,23 @@
                 </div>
             </div>
 
+            <!-- Mobile Backdrop for Palette Drawer -->
+            <div class="palette-backdrop" id="paletteBackdrop" onclick="togglePaletteDrawer(false)"></div>
+
             <!-- Right: Candidate Profile and Palette -->
-            <div class="sidebar-panel">
+            <div class="sidebar-panel" id="sidebarPanel">
                 <div class="candidate-info-box">
                     <div class="candidate-photo">
                         Candidate Photo
                     </div>
-                    <div class="candidate-details">
+                    <div class="candidate-details" style="flex: 1;">
                         Candidate Name: <strong>Candidate User</strong><br>
                         Exam Code: <strong>GSSSB-212</strong><br>
                         System Number: <strong>C001</strong>
                     </div>
+                    <button type="button" class="close-palette-btn hide-desktop" id="btnClosePalette" title="Close Palette" onclick="togglePaletteDrawer(false)">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
 
                 <div class="palette-container">

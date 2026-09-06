@@ -696,7 +696,7 @@ html, body {
         max-width: 88vw !important;
         height: 100% !important;
         height: 100dvh !important;
-        z-index: 2000 !important;
+        z-index: 2500 !important;
         background: #ffffff !important;
         box-shadow: -5px 0 25px rgba(0,0,0,0.3) !important;
         transition: right 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -717,6 +717,7 @@ html, body {
         z-index: 1900 !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
+        pointer-events: auto !important;
     }
 
     .palette-backdrop.active {
@@ -726,11 +727,16 @@ html, body {
     .palette-grid {
         grid-template-columns: repeat(5, 1fr) !important;
         gap: 6px !important;
+        pointer-events: auto !important;
     }
 
     .palette-btn {
         height: 36px !important;
         font-size: 12.5px !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: transparent !important;
     }
 
     /* Detached footer is completely hidden on mobile: buttons sit directly beneath Option E and in top bar */

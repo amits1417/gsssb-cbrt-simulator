@@ -169,12 +169,13 @@
                 max-width: 88vw !important;
                 height: 100% !important;
                 height: 100dvh !important;
-                z-index: 2000 !important;
+                z-index: 2500 !important;
                 background: #ffffff !important;
                 box-shadow: -5px 0 25px rgba(0,0,0,0.3) !important;
                 transition: right 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
                 display: flex !important;
                 flex-direction: column !important;
+                border-left: none !important;
             }
 
             .sidebar-panel.open {
@@ -185,6 +186,13 @@
                 z-index: 1900 !important;
                 backdrop-filter: none !important;
                 -webkit-backdrop-filter: none !important;
+                pointer-events: auto !important;
+            }
+
+            .palette-btn {
+                pointer-events: auto !important;
+                touch-action: manipulation !important;
+                cursor: pointer !important;
             }
         }
 
@@ -443,9 +451,6 @@
         </div>
     </header>
 
-    <!-- MOBILE BACKDROP FOR PALETTE DRAWER -->
-    <div class="palette-backdrop" id="paletteBackdrop"></div>
-
     <!-- MAIN EXAM CONTAINER -->
     <div class="main-container">
         <!-- Left: Question Display (Takes 100% on Mobile) -->
@@ -548,6 +553,9 @@
                 </div>
             </div>
         </div>
+
+        <!-- Mobile Backdrop for Palette Drawer -->
+        <div class="palette-backdrop" id="paletteBackdrop"></div>
 
         <!-- Right: Candidate Profile and Palette (Slide-out Drawer on Mobile) -->
         <div class="sidebar-panel" id="sidebarPanel">
@@ -823,13 +831,18 @@
 
         function buildPalette() {
             const grid = document.getElementById("paletteGrid");
+            if (!grid) return;
             grid.innerHTML = "";
             for (let i = 0; i < questions.length; i++) {
                 const btn = document.createElement("button");
+                btn.type = "button";
                 btn.id = `paletteBtn_${i}`;
                 btn.className = `palette-btn ${statuses[i]}`;
                 btn.innerText = i + 1;
-                btn.addEventListener("click", () => navigateToQuestion(i));
+                btn.onclick = function(e) {
+                    if (e) { e.preventDefault(); e.stopPropagation(); }
+                    navigateToQuestion(i);
+                };
                 grid.appendChild(btn);
             }
         }
