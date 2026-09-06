@@ -580,50 +580,74 @@ def _send_otp_sms(phone, otp, name=None, email=None):
     return otp if os.environ.get('SMS_DEBUG', '1') == '1' else None
 
 
+def _send_via_resend(to_email, subject, html_content, text_content=None, reply_to=None, from_name=None):
+    """Send email via Resend API with official masked sender address.
+    Completely masks admin personal email."""
+    if not to_email:
+        return False
+    key = os.environ.get('RESEND_API_KEY', '').strip()
+    if not key:
+        return False
+    
+    sender_name = from_name or os.environ.get('RESEND_FROM_NAME', 'GSSSB CBRT Exam Portal')
+    sender_addr = os.environ.get('RESEND_FROM', 'onboarding@resend.dev').strip()
+    reply_to_addr = reply_to or os.environ.get('RESEND_REPLY_TO', 'support@ccemock.online').strip()
+    
+    import urllib.request
+    import json
+    payload = {
+        'from': f"{sender_name} <{sender_addr}>",
+        'to': [to_email.strip().lower()],
+        'subject': subject,
+        'html': html_content,
+        'text': text_content or subject,
+        'reply_to': reply_to_addr
+    }
+    try:
+        req = urllib.request.Request(
+            'https://api.resend.com/emails',
+            data=json.dumps(payload).encode('utf-8'),
+            headers={
+                'Authorization': f'Bearer {key}',
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+            }
+        )
+        with urllib.request.urlopen(req, timeout=12) as res:
+            res_body = res.read().decode('utf-8')
+            print(f"[RESEND] Masked email sent successfully to {to_email}: {res_body}")
+            return True
+    except Exception as e:
+        print(f"[RESEND] Failed sending to {to_email}: {e}")
+        return False
+
+
 def _send_email_otp(email, otp, name=None, purpose='login'):
     if not email:
         print(f"[OTP] (no email on record) OTP for {name or ''}: {otp}")
         return None
-    host = os.environ.get('SMTP_HOST')
-    user = os.environ.get('SMTP_USER')
-    pwd = os.environ.get('SMTP_PASS')
-    if not (host and user and pwd):
-        print("[OTP] SMTP not configured; falling back to console log.")
-        print(f"[OTP] (email) OTP for {email}: {otp}")
-        return otp if os.environ.get('SMS_DEBUG', '1') == '1' else None
-    import smtplib
-    from email.message import EmailMessage
-    from email.utils import formataddr
-    port = int(os.environ.get('SMTP_PORT', '587'))
-    sender = os.environ.get('SMTP_FROM', user)
-    from_name = os.environ.get('SMTP_FROM_NAME', 'GSSSB CBRT Exam Portal')
-    reply_to = os.environ.get('SMTP_REPLY_TO', 'support@ccemock.online')
-    try:
-        msg = EmailMessage()
-        if purpose == 'forgot_password':
-            subject_str = 'Your GSSSB CCE Password Reset OTP - (પાસવર્ડ રીસેટ OTP)'
-            header_str = 'Password Reset OTP'
-            desc_str = 'Use the following One-Time Password (OTP) to reset your GSSSB CBRT account password:'
-            footer_warn = 'If you did not request a password reset, please ignore this email.'
-        else:
-            subject_str = 'Your GSSSB CCE Login OTP'
-            header_str = 'GSSSB CBRT Exam Portal'
-            desc_str = 'Use the following One-Time Password (OTP) to sign in and authorize your device:'
-            footer_warn = 'If you did not request this, please ignore this email.'
 
-        msg['Subject'] = subject_str
-        msg['From'] = formataddr((from_name, sender))
-        msg['To'] = email
-        msg['Reply-To'] = reply_to
-        msg.set_content(
-            f"Hello {name or 'Candidate'},\n\n"
-            f"{desc_str} {otp}\n"
-            f"It is valid for 10 minutes.\n\n"
-            f"{footer_warn}\n\n"
-            f"- GSSSB CCE Examination Support Team\n"
-            f"https://ccemock.online"
-        )
-        msg.add_alternative(f"""<!DOCTYPE html>
+    if purpose == 'forgot_password':
+        subject_str = 'Your GSSSB CCE Password Reset OTP - (પાસવર્ડ રીસેટ OTP)'
+        header_str = 'Password Reset OTP'
+        desc_str = 'Use the following One-Time Password (OTP) to reset your GSSSB CBRT account password:'
+        footer_warn = 'If you did not request a password reset, please ignore this email.'
+    else:
+        subject_str = 'Your GSSSB CCE Login OTP'
+        header_str = 'GSSSB CBRT Exam Portal'
+        desc_str = 'Use the following One-Time Password (OTP) to sign in and authorize your device:'
+        footer_warn = 'If you did not request this, please ignore this email.'
+
+    text_body = (
+        f"Hello {name or 'Candidate'},\n\n"
+        f"{desc_str} {otp}\n"
+        f"It is valid for 10 minutes.\n\n"
+        f"{footer_warn}\n\n"
+        f"- GSSSB CCE Examination Support Team\n"
+        f"https://ccemock.online"
+    )
+
+    html_body = f"""<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"></head>
 <body style="margin:0; padding:20px; font-family:Arial, sans-serif; background-color:#f8fafc;">
@@ -645,7 +669,37 @@ def _send_email_otp(email, otp, name=None, purpose='login'):
     </div>
   </div>
 </body>
-</html>""", subtype='html')
+</html>"""
+
+    # 1. Primary: Send via Resend (Masked Official Sender)
+    if os.environ.get('RESEND_API_KEY'):
+        if _send_via_resend(email, subject_str, html_body, text_body):
+            return None
+
+    # 2. Fallback: SMTP if Resend is not configured
+    host = os.environ.get('SMTP_HOST')
+    user = os.environ.get('SMTP_USER')
+    pwd = os.environ.get('SMTP_PASS')
+    if not (host and user and pwd):
+        print("[OTP] SMTP/Resend not configured; falling back to console log.")
+        print(f"[OTP] (email) OTP for {email}: {otp}")
+        return otp if os.environ.get('SMS_DEBUG', '1') == '1' else None
+
+    import smtplib
+    from email.message import EmailMessage
+    from email.utils import formataddr
+    port = int(os.environ.get('SMTP_PORT', '587'))
+    sender = os.environ.get('SMTP_FROM', user)
+    from_name = os.environ.get('SMTP_FROM_NAME', 'GSSSB CBRT Exam Portal')
+    reply_to = os.environ.get('SMTP_REPLY_TO', 'support@ccemock.online')
+    try:
+        msg = EmailMessage()
+        msg['Subject'] = subject_str
+        msg['From'] = formataddr((from_name, sender))
+        msg['To'] = email
+        msg['Reply-To'] = reply_to
+        msg.set_content(text_body)
+        msg.add_alternative(html_body, subtype='html')
         with smtplib.SMTP(host, port, timeout=10) as s:
             s.starttls()
             s.login(user, pwd)
@@ -1594,30 +1648,12 @@ def delete_support_ticket(ticket_id):
 def _send_custom_email(email, subject, content, name=None):
     if not email:
         return False
-    host = os.environ.get('SMTP_HOST')
-    user = os.environ.get('SMTP_USER')
-    pwd = os.environ.get('SMTP_PASS')
-    if not (host and user and pwd):
-        print(f"[EMAIL] SMTP not configured. Custom email to {email}: {subject}")
-        return False
-    import smtplib
-    from email.message import EmailMessage
-    from email.utils import formataddr
-    port = int(os.environ.get('SMTP_PORT', '587'))
-    sender = os.environ.get('SMTP_FROM', user)
+
     from_name = os.environ.get('SMTP_FROM_NAME', 'GSSSB CBRT Exam Portal')
     reply_to = os.environ.get('SMTP_REPLY_TO', 'support@ccemock.online')
-    try:
-        msg = EmailMessage()
-        msg['Subject'] = subject
-        msg['From'] = formataddr((from_name, sender))
-        msg['To'] = email
-        msg['Reply-To'] = reply_to
-        msg.set_content(content)
-        
-        # Professional Official Portal HTML Email Template
-        safe_content = content.replace('\n', '<br>')
-        msg.add_alternative(f"""<!DOCTYPE html>
+    safe_content = content.replace('\n', '<br>')
+    
+    html_body = f"""<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"></head>
 <body style="margin:0; padding:20px; font-family:Arial, sans-serif; background-color:#f8fafc;">
@@ -1643,13 +1679,39 @@ def _send_custom_email(email, subject, content, name=None):
     </div>
   </div>
 </body>
-</html>""", subtype='html')
+</html>"""
+
+    # 1. Primary: Send via Resend (Masked Official Sender)
+    if os.environ.get('RESEND_API_KEY'):
+        if _send_via_resend(email, subject, html_body, content, reply_to, from_name):
+            return True
+
+    # 2. Fallback: SMTP if configured
+    host = os.environ.get('SMTP_HOST')
+    user = os.environ.get('SMTP_USER')
+    pwd = os.environ.get('SMTP_PASS')
+    if not (host and user and pwd):
+        print(f"[EMAIL] SMTP/Resend not configured. Custom email to {email}: {subject}")
+        return False
+    import smtplib
+    from email.message import EmailMessage
+    from email.utils import formataddr
+    port = int(os.environ.get('SMTP_PORT', '587'))
+    sender = os.environ.get('SMTP_FROM', user)
+    try:
+        msg = EmailMessage()
+        msg['Subject'] = subject
+        msg['From'] = formataddr((from_name, sender))
+        msg['To'] = email
+        msg['Reply-To'] = reply_to
+        msg.set_content(content)
+        msg.add_alternative(html_body, subtype='html')
 
         with smtplib.SMTP(host, port, timeout=10) as s:
             s.starttls()
             s.login(user, pwd)
             s.send_message(msg)
-        print(f"[EMAIL] Custom branded email sent to {email}")
+        print(f"[EMAIL] Custom branded email sent via SMTP to {email}")
         return True
     except Exception as e:
         print(f"[EMAIL] Custom email send failed: {e}")
