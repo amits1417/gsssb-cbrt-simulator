@@ -713,9 +713,10 @@ html, body {
         display: none !important;
         position: fixed !important;
         inset: 0 !important;
-        background: rgba(15, 23, 42, 0.65) !important;
+        background: rgba(0, 0, 0, 0.4) !important;
         z-index: 1900 !important;
-        backdrop-filter: blur(2px) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
 
     .palette-backdrop.active {
