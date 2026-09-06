@@ -483,9 +483,9 @@
                     Select Plan / Duration
                 </label>
                 <select id="subPlanSelect" onchange="onPlanSelectChange()" style="width: 100%; padding: 0.75rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem; outline: none; font-weight: 600;">
-                    <option value="30" data-amount="300" data-name="1 Month Plan" selected>🌟 1 Month (30 Days) - ₹300</option>
-                    <option value="90" data-amount="600" data-name="3 Months Plan">🌟 3 Months (90 Days) - ₹600</option>
-                    <option value="180" data-amount="999" data-name="6 Months Plan">🌟 6 Months (180 Days) - ₹999</option>
+                    <option value="30" data-amount="99" data-name="1 Month Plan" selected>🌟 1 Month (30 Days) - ₹99</option>
+                    <option value="90" data-amount="199" data-name="3 Months Plan">🌟 3 Months (90 Days) - ₹199</option>
+                    <option value="180" data-amount="399" data-name="6 Months Plan">🌟 6 Months (180 Days) - ₹399</option>
                     <option value="365" data-amount="1499" data-name="1 Year Plan">🌟 1 Year (365 Days) - ₹1,499</option>
                     <option value="3650" data-amount="2000" data-name="Lifetime Access">♾️ Lifetime Permanent Access - All 71 Papers</option>
                     <option value="custom" data-amount="0" data-name="Custom Plan">✏️ Custom Days / Custom Plan</option>
@@ -505,7 +505,7 @@
                     <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--dark);">
                         Amount Received (₹)
                     </label>
-                    <input type="number" id="subAmount" value="300" required min="0" style="width: 100%; padding: 0.7rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem; outline: none;">
+                    <input type="number" id="subAmount" value="99" required min="0" style="width: 100%; padding: 0.7rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem; outline: none;">
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--dark);">
@@ -558,7 +558,7 @@
             amountInput.value = '0';
         } else {
             customGroup.style.display = 'none';
-            amountInput.value = selectedOpt.getAttribute('data-amount') || '300';
+            amountInput.value = selectedOpt.getAttribute('data-amount') || '99';
             nameInput.value = selectedOpt.getAttribute('data-name') || 'Pro Plan';
         }
     }
