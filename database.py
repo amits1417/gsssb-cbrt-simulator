@@ -71,7 +71,165 @@ def _load_dotenv(path=None):
 
 _load_dotenv()
 
+# --- Turso Cloud SQLite Integration (Zero-dependency via HTTP) ---
+class TursoRow(dict):
+    """Dict subclass that allows both dict access (row['name']) and tuple index access (row[0])."""
+    def __init__(self, cols, values):
+        super().__init__()
+        self._keys = list(cols)
+        self._values = list(values)
+        for k, v in zip(cols, values):
+            self[k] = v
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return self._values[item]
+        return super().__getitem__(item)
+
+    def keys(self):
+        return self._keys
+
+class TursoCursor:
+    def __init__(self, conn):
+        self.conn = conn
+        self.rows = []
+        self.lastrowid = None
+        self.rowcount = 0
+        self.description = None
+        self._idx = 0
+
+    def execute(self, sql, params=None):
+        params = params or ()
+        sql_stmt = sql.strip()
+        
+        args = []
+        for p in params:
+            if p is None:
+                args.append({"type": "null"})
+            elif isinstance(p, bool):
+                args.append({"type": "integer", "value": "1" if p else "0"})
+            elif isinstance(p, int):
+                args.append({"type": "integer", "value": str(p)})
+            elif isinstance(p, float):
+                args.append({"type": "float", "value": p})
+            elif isinstance(p, bytes):
+                import base64
+                args.append({"type": "blob", "base64": base64.b64encode(p).decode()})
+            else:
+                args.append({"type": "text", "value": str(p)})
+                
+        payload = {
+            "requests": [
+                {
+                    "type": "execute",
+                    "stmt": {
+                        "sql": sql_stmt,
+                        "args": args
+                    }
+                },
+                {"type": "close"}
+            ]
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {self.conn.token}",
+            "Content-Type": "application/json"
+        }
+        
+        try:
+            req = urllib.request.Request(self.conn.pipeline_url, data=json.dumps(payload).encode('utf-8'), headers=headers)
+            with urllib.request.urlopen(req, timeout=12) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode('utf-8', errors='ignore')
+            raise sqlite3.OperationalError(f"Turso HTTP Error: {err_body}")
+        except Exception as e:
+            raise sqlite3.OperationalError(f"Turso Connection Error: {str(e)}")
+            
+        results = data.get("results", [])
+        if results and results[0].get("type") == "ok":
+            res = results[0].get("response", {}).get("result", {})
+            cols = [c.get("name", f"col_{i}") for i, c in enumerate(res.get("cols", []))]
+            raw_rows = res.get("rows", [])
+            last_id = res.get("last_insert_rowid")
+            self.lastrowid = int(last_id) if last_id is not None else None
+            self.rowcount = int(res.get("affected_row_count", 0) or 0)
+            
+            parsed_rows = []
+            for r in raw_rows:
+                row_vals = []
+                for cell in r:
+                    c_type = cell.get("type")
+                    if c_type == "null":
+                        row_vals.append(None)
+                    elif c_type == "integer":
+                        try:
+                            row_vals.append(int(cell.get("value", 0)))
+                        except:
+                            row_vals.append(cell.get("value"))
+                    elif c_type == "float":
+                        try:
+                            row_vals.append(float(cell.get("value", 0.0)))
+                        except:
+                            row_vals.append(cell.get("value"))
+                    else:
+                        row_vals.append(cell.get("value", ""))
+                parsed_rows.append(TursoRow(cols, row_vals))
+                
+            self.rows = parsed_rows
+            self._idx = 0
+        elif results and results[0].get("type") == "error":
+            err_msg = results[0].get("error", {}).get("message", "Unknown Turso error")
+            raise sqlite3.OperationalError(err_msg)
+        return self
+
+    def executemany(self, sql, seq_of_params):
+        for params in seq_of_params:
+            self.execute(sql, params)
+        return self
+
+    def fetchone(self):
+        if self._idx < len(self.rows):
+            row = self.rows[self._idx]
+            self._idx += 1
+            return row
+        return None
+
+    def fetchall(self):
+        res = self.rows[self._idx:]
+        self._idx = len(self.rows)
+        return res
+
+class TursoConnection:
+    def __init__(self, url, token):
+        cleaned = url.strip().replace("libsql://", "https://").rstrip("/")
+        if not cleaned.startswith("http"):
+            cleaned = f"https://{cleaned}"
+        if not cleaned.endswith("/v2/pipeline"):
+            cleaned = f"{cleaned}/v2/pipeline"
+        self.pipeline_url = cleaned
+        self.token = token.strip()
+
+    def cursor(self):
+        return TursoCursor(self)
+
+    def execute(self, sql, params=None):
+        c = self.cursor()
+        return c.execute(sql, params)
+
+    def commit(self):
+        pass
+
+    def close(self):
+        pass
+
 def get_db_connection():
+    turso_url = os.environ.get('TURSO_DATABASE_URL') or os.environ.get('TURSO_URL')
+    turso_token = os.environ.get('TURSO_AUTH_TOKEN') or os.environ.get('TURSO_TOKEN')
+    
+    if turso_url and turso_token:
+        return TursoConnection(turso_url, turso_token)
+        
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
