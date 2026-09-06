@@ -580,7 +580,7 @@ def _send_otp_sms(phone, otp, name=None, email=None):
     return otp if os.environ.get('SMS_DEBUG', '1') == '1' else None
 
 
-def _send_email_otp(email, otp, name=None):
+def _send_email_otp(email, otp, name=None, purpose='login'):
     if not email:
         print(f"[OTP] (no email on record) OTP for {name or ''}: {otp}")
         return None
@@ -600,15 +600,26 @@ def _send_email_otp(email, otp, name=None):
     reply_to = os.environ.get('SMTP_REPLY_TO', 'support@ccemock.online')
     try:
         msg = EmailMessage()
-        msg['Subject'] = 'Your GSSSB CCE Login OTP'
+        if purpose == 'forgot_password':
+            subject_str = 'Your GSSSB CCE Password Reset OTP - (પાસવર્ડ રીસેટ OTP)'
+            header_str = 'Password Reset OTP'
+            desc_str = 'Use the following One-Time Password (OTP) to reset your GSSSB CBRT account password:'
+            footer_warn = 'If you did not request a password reset, please ignore this email.'
+        else:
+            subject_str = 'Your GSSSB CCE Login OTP'
+            header_str = 'GSSSB CBRT Exam Portal'
+            desc_str = 'Use the following One-Time Password (OTP) to sign in and authorize your device:'
+            footer_warn = 'If you did not request this, please ignore this email.'
+
+        msg['Subject'] = subject_str
         msg['From'] = formataddr((from_name, sender))
         msg['To'] = email
         msg['Reply-To'] = reply_to
         msg.set_content(
             f"Hello {name or 'Candidate'},\n\n"
-            f"Your one-time password (OTP) to authorize this device is: {otp}\n"
+            f"{desc_str} {otp}\n"
             f"It is valid for 10 minutes.\n\n"
-            f"If you did not request this, please ignore this email.\n\n"
+            f"{footer_warn}\n\n"
             f"- GSSSB CCE Examination Support Team\n"
             f"https://ccemock.online"
         )
@@ -618,12 +629,12 @@ def _send_email_otp(email, otp, name=None):
 <body style="margin:0; padding:20px; font-family:Arial, sans-serif; background-color:#f8fafc;">
   <div style="max-width:520px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
     <div style="background:linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%); padding:22px 20px; text-align:center; color:#ffffff;">
-      <h2 style="margin:0; font-size:19px; font-weight:800;">GSSSB CBRT Exam Portal</h2>
+      <h2 style="margin:0; font-size:19px; font-weight:800;">{header_str}</h2>
       <p style="margin:4px 0 0 0; font-size:12px; color:#c7d2fe;">Advt. No: GSSSB/202324/212 (CCE Class-III)</p>
     </div>
     <div style="padding:24px 22px; color:#1e293b;">
       <p style="font-size:15px; margin-top:0;">Hello <strong>{name or 'Candidate'}</strong>,</p>
-      <p style="font-size:14px; color:#475569; line-height:1.5;">Use the following One-Time Password (OTP) to sign in and authorize your device:</p>
+      <p style="font-size:14px; color:#475569; line-height:1.5;">{desc_str}</p>
       <div style="text-align:center; margin:22px 0;">
         <span style="display:inline-block; font-size:28px; font-weight:800; letter-spacing:6px; background:#f0fdf4; color:#15803d; border:2px dashed #86efac; padding:10px 24px; border-radius:8px;">{otp}</span>
       </div>
@@ -752,39 +763,68 @@ def verify_otp_and_login(email, otp, device_id=None, device_info=None, ip_addres
     conn.close()
     return {'status': 'OK', 'user': user, 'token': new_session_token}
 
-def request_forgot_password_otp(email):
+def request_forgot_password_otp(email_or_phone):
     conn = get_db_connection()
     cursor = conn.cursor()
-    email_clean = email.strip().lower()
-    cursor.execute('SELECT * FROM users WHERE email = ?', (email_clean,))
+    query_val = str(email_or_phone or '').strip().lower()
+    if not query_val:
+        conn.close()
+        return {'status': 'ERROR', 'message': 'Please enter your registered email address or mobile number.'}
+    
+    # Support lookup by email OR 10-digit mobile number
+    cursor.execute('SELECT * FROM users WHERE LOWER(TRIM(email)) = ? OR TRIM(phone) = ?', (query_val, query_val))
     row = cursor.fetchone()
     if not row:
         conn.close()
-        return {'status': 'ERROR', 'message': 'No account found with this email address (આ ઈમેલ સાથે કોઈ ખાતું મળ્યું નથી).'}
+        return {'status': 'ERROR', 'message': 'No account found with this email or mobile number (આ ઈમેલ કે મોબાઈલ નંબર સાથે કોઈ ખાતું મળ્યું નથી).'}
     
     user = dict(row)
+    user_email = (user.get('email') or '').strip().lower()
+    if not user_email:
+        conn.close()
+        return {'status': 'ERROR', 'message': 'No email address registered on this account.'}
+
     otp = _generate_otp()
     _store_otp(cursor, conn, user['id'], otp)
     
-    dev_otp = _send_email_otp(user['email'], otp, user.get('name'))
+    dev_otp = _send_email_otp(user_email, otp, user.get('name'), purpose='forgot_password')
     conn.close()
-    return {'status': 'OK', 'message': f'6-Digit Password Reset OTP has been sent to {user["email"]}.', 'dev_otp': dev_otp}
 
-def reset_password_with_otp(email, otp, new_password, device_id=None, device_info=None, ip_address=None):
+    # Mask email for user feedback: e.g., a****7@gmail.com
+    masked = user_email
+    if '@' in user_email:
+        parts = user_email.split('@')
+        uname = parts[0]
+        domain = parts[1]
+        if len(uname) > 2:
+            masked = uname[0] + ('*' * (len(uname) - 2)) + uname[-1] + '@' + domain
+        else:
+            masked = uname[0] + '*@' + domain
+
+    return {
+        'status': 'OK',
+        'message': f'6-Digit Password Reset OTP has been sent to your email ({masked}).',
+        'dev_otp': dev_otp,
+        'email': user_email,
+        'masked_target': masked
+    }
+
+def reset_password_with_otp(email_or_phone, otp, new_password, device_id=None, device_info=None, ip_address=None):
     conn = get_db_connection()
     cursor = conn.cursor()
-    email_clean = email.strip().lower()
+    query_val = str(email_or_phone or '').strip().lower()
     otp_clean = str(otp).strip()
     
     if not new_password or len(new_password) < 6:
         conn.close()
-        return {'status': 'ERROR', 'message': 'New password must be at least 6 characters long.'}
+        return {'status': 'ERROR', 'message': 'New password must be at least 6 characters long (પાસવર્ડ ઓછામાં ઓછો ૬ અક્ષરનો હોવો જોઈએ).'}
     
-    cursor.execute('SELECT * FROM users WHERE email = ?', (email_clean,))
+    # Support lookup by email OR 10-digit mobile number
+    cursor.execute('SELECT * FROM users WHERE LOWER(TRIM(email)) = ? OR TRIM(phone) = ?', (query_val, query_val))
     row = cursor.fetchone()
     if not row:
         conn.close()
-        return {'status': 'ERROR', 'message': 'Account not found.'}
+        return {'status': 'ERROR', 'message': 'Account not found (ખાતું મળ્યું નથી).'}
         
     user = dict(row)
     stored_otp = user.get('otp_code')
@@ -792,13 +832,13 @@ def reset_password_with_otp(email, otp, new_password, device_id=None, device_inf
     
     if not stored_otp or str(stored_otp).strip() != otp_clean:
         conn.close()
-        return {'status': 'ERROR', 'message': 'Invalid OTP code. Please check your email and try again.'}
+        return {'status': 'ERROR', 'message': 'Invalid OTP code. Please check your email and try again (અમાન્ય OTP કોડ).'}
         
     if expires_at:
         try:
             if datetime.datetime.now() > datetime.datetime.fromisoformat(expires_at):
                 conn.close()
-                return {'status': 'ERROR', 'message': 'OTP has expired. Please request a new one.'}
+                return {'status': 'ERROR', 'message': 'OTP has expired. Please request a new one (OTP ની માન્યતા પૂર્ણ થઈ ગઈ છે).'}
         except:
             pass
         

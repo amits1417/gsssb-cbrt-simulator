@@ -283,17 +283,19 @@ def api_signup():
 @app.route('/api/auth/forgot-password/request', methods=['POST'])
 def api_forgot_password_request():
     data = request.get_json() or {}
-    email = data.get('email', '').strip().lower()
-    if not email:
-        return jsonify({'error': 'Please enter your registered email address / કૃપા કરીને તમારો રજીસ્ટર્ડ ઈમેલ દાખલ કરો.'}), 400
+    email_or_phone = data.get('email', '').strip().lower()
+    if not email_or_phone:
+        return jsonify({'error': 'Please enter your registered email address or mobile number / કૃપા કરીને તમારો રજીસ્ટર્ડ ઈમેલ અથવા મોબાઈલ નંબર દાખલ કરો.'}), 400
         
-    result = db.request_forgot_password_otp(email)
+    result = db.request_forgot_password_otp(email_or_phone)
     if result['status'] == 'ERROR':
         return jsonify({'error': result['message']}), 400
         
     return jsonify({
         'success': True,
         'message': result['message'],
+        'email': result.get('email'),
+        'masked_target': result.get('masked_target'),
         'dev_otp': result.get('dev_otp')
     })
 

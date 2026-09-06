@@ -163,12 +163,12 @@
         <!-- Step 1: Request OTP Form -->
         <form id="forgotStep1Form" onsubmit="handleRequestForgotOtp(event)">
             <div style="margin-bottom: 1.25rem;">
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--dark);">Registered Email Address (રજીસ્ટર્ડ ઈમેઈલ)</label>
-                <input type="email" id="forgotEmailInput" required placeholder="name@example.com"
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--dark);">Registered Email / Mobile (રજીસ્ટર્ડ ઈમેઈલ અથવા મોબાઈલ નંબર)</label>
+                <input type="text" id="forgotEmailInput" required placeholder="name@example.com or 10-digit mobile"
                     style="width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem; outline: none;">
             </div>
             <button type="submit" id="btnForgotRequestOtp" class="btn btn-primary" style="width: 100%; padding: 0.8rem; font-size: 0.95rem;">
-                <i class="fa-solid fa-paper-plane"></i> Send OTP to Email (OTP મોકલો)
+                <i class="fa-solid fa-paper-plane"></i> Send OTP (OTP મોકલો)
             </button>
         </form>
 
@@ -489,27 +489,28 @@
 
     async function handleRequestForgotOtp(e) {
         e.preventDefault();
-        currentForgotEmail = document.getElementById('forgotEmailInput').value.trim();
+        const inputVal = document.getElementById('forgotEmailInput').value.trim();
         const btn = document.getElementById('btnForgotRequestOtp');
 
-        if (!currentForgotEmail) {
-            showToast('Please enter your registered email address', 'error');
+        if (!inputVal) {
+            showToast('Please enter your registered email address or mobile number', 'error');
             return;
         }
 
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending OTP to Email...';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending OTP...';
 
         try {
             const res = await fetch('/api/auth/forgot-password/request', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: currentForgotEmail })
+                body: JSON.stringify({ email: inputVal })
             });
             const data = await res.json();
             if (res.ok && data.success) {
                 showToast(data.message, 'success');
-                document.getElementById('forgotTargetEmail').innerText = currentForgotEmail;
+                currentForgotEmail = data.email || inputVal;
+                document.getElementById('forgotTargetEmail').innerText = data.masked_target || currentForgotEmail;
                 document.getElementById('forgotStep1Form').style.display = 'none';
                 document.getElementById('forgotStep2Form').style.display = 'block';
                 document.getElementById('forgotOtpInput').focus();
@@ -517,12 +518,12 @@
             } else {
                 showToast(data.error || 'Failed to send reset OTP', 'error');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP to Email (OTP મોકલો)';
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP (OTP મોકલો)';
             }
         } catch (err) {
             showToast('Network error, please try again', 'error');
             btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP to Email (OTP મોકલો)';
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP (OTP મોકલો)';
         }
     }
 
