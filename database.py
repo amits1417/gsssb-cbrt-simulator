@@ -590,25 +590,52 @@ def _send_email_otp(email, otp, name=None):
     if not (host and user and pwd):
         print("[OTP] SMTP not configured; falling back to console log.")
         print(f"[OTP] (email) OTP for {email}: {otp}")
-        # In dev we still surface the OTP for easy testing.
         return otp if os.environ.get('SMS_DEBUG', '1') == '1' else None
     import smtplib
     from email.message import EmailMessage
+    from email.utils import formataddr
     port = int(os.environ.get('SMTP_PORT', '587'))
     sender = os.environ.get('SMTP_FROM', user)
+    from_name = os.environ.get('SMTP_FROM_NAME', 'GSSSB CBRT Exam Portal')
+    reply_to = os.environ.get('SMTP_REPLY_TO', 'support@ccemock.online')
     try:
         msg = EmailMessage()
         msg['Subject'] = 'Your GSSSB CCE Login OTP'
-        msg['From'] = sender
+        msg['From'] = formataddr((from_name, sender))
         msg['To'] = email
+        msg['Reply-To'] = reply_to
         msg.set_content(
             f"Hello {name or 'Candidate'},\n\n"
             f"Your one-time password (OTP) to authorize this device is: {otp}\n"
             f"It is valid for 10 minutes.\n\n"
             f"If you did not request this, please ignore this email.\n\n"
-            f"- GSSSB CCE Mocktest Team"
+            f"- GSSSB CCE Examination Support Team\n"
+            f"https://ccemock.online"
         )
-        with smtplib.SMTP(host, port) as s:
+        msg.add_alternative(f"""<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0; padding:20px; font-family:Arial, sans-serif; background-color:#f8fafc;">
+  <div style="max-width:520px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+    <div style="background:linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%); padding:22px 20px; text-align:center; color:#ffffff;">
+      <h2 style="margin:0; font-size:19px; font-weight:800;">GSSSB CBRT Exam Portal</h2>
+      <p style="margin:4px 0 0 0; font-size:12px; color:#c7d2fe;">Advt. No: GSSSB/202324/212 (CCE Class-III)</p>
+    </div>
+    <div style="padding:24px 22px; color:#1e293b;">
+      <p style="font-size:15px; margin-top:0;">Hello <strong>{name or 'Candidate'}</strong>,</p>
+      <p style="font-size:14px; color:#475569; line-height:1.5;">Use the following One-Time Password (OTP) to sign in and authorize your device:</p>
+      <div style="text-align:center; margin:22px 0;">
+        <span style="display:inline-block; font-size:28px; font-weight:800; letter-spacing:6px; background:#f0fdf4; color:#15803d; border:2px dashed #86efac; padding:10px 24px; border-radius:8px;">{otp}</span>
+      </div>
+      <p style="font-size:12px; color:#64748b; text-align:center;">This OTP is valid for 10 minutes. Do not share it with anyone.</p>
+    </div>
+    <div style="background:#f1f5f9; padding:12px; text-align:center; font-size:11px; color:#64748b; border-top:1px solid #e2e8f0;">
+      Official Examination Simulator &bull; <a href="https://ccemock.online" style="color:#4338ca; text-decoration:none;">ccemock.online</a>
+    </div>
+  </div>
+</body>
+</html>""", subtype='html')
+        with smtplib.SMTP(host, port, timeout=10) as s:
             s.starttls()
             s.login(user, pwd)
             s.send_message(msg)
@@ -616,8 +643,6 @@ def _send_email_otp(email, otp, name=None):
         return None
     except Exception as e:
         print(f"[OTP] Email send failed: {e}")
-        # In dev mode, still surface the OTP so local testing works even with
-        # broken/placeholder SMTP credentials.
         return otp if os.environ.get('SMS_DEBUG', '1') == '1' else None
 
 
@@ -1537,19 +1562,54 @@ def _send_custom_email(email, subject, content, name=None):
         return False
     import smtplib
     from email.message import EmailMessage
+    from email.utils import formataddr
     port = int(os.environ.get('SMTP_PORT', '587'))
     sender = os.environ.get('SMTP_FROM', user)
+    from_name = os.environ.get('SMTP_FROM_NAME', 'GSSSB CBRT Exam Portal')
+    reply_to = os.environ.get('SMTP_REPLY_TO', 'support@ccemock.online')
     try:
         msg = EmailMessage()
         msg['Subject'] = subject
-        msg['From'] = sender
+        msg['From'] = formataddr((from_name, sender))
         msg['To'] = email
+        msg['Reply-To'] = reply_to
         msg.set_content(content)
+        
+        # Professional Official Portal HTML Email Template
+        safe_content = content.replace('\n', '<br>')
+        msg.add_alternative(f"""<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0; padding:20px; font-family:Arial, sans-serif; background-color:#f8fafc;">
+  <div style="max-width:580px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,0.06);">
+    <div style="background:linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%); padding:24px 20px; text-align:center; color:#ffffff;">
+      <h2 style="margin:0; font-size:20px; font-weight:800; letter-spacing:0.5px;">GSSSB Combined Competitive Exam Portal</h2>
+      <p style="margin:6px 0 0 0; font-size:12px; color:#c7d2fe;">Advt. No: GSSSB/202324/212 (CCE Class-III Series)</p>
+    </div>
+    <div style="padding:26px 24px; color:#1e293b; line-height:1.6;">
+      <p style="font-size:15px; margin-top:0; font-weight:bold; color:#0f172a;">Hello {name or 'Candidate'},</p>
+      <div style="background:#f8fafc; border-left:4px solid #4338ca; border-radius:6px; padding:16px 18px; margin:16px 0; font-size:14px; color:#334155; line-height:1.65;">
+        {safe_content}
+      </div>
+      <div style="text-align:center; margin:26px 0 10px 0;">
+        <a href="https://ccemock.online/dashboard" style="display:inline-block; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#ffffff; text-decoration:none; padding:11px 26px; font-weight:bold; border-radius:8px; font-size:14px; box-shadow:0 4px 10px rgba(16,185,129,0.3);">
+          Access Candidate Dashboard
+        </a>
+      </div>
+    </div>
+    <div style="background:#f1f5f9; padding:14px; text-align:center; font-size:11.5px; color:#64748b; border-top:1px solid #e2e8f0;">
+      Official Examination Simulator &bull; <a href="https://ccemock.online" style="color:#4338ca; text-decoration:none; font-weight:bold;">ccemock.online</a><br>
+      <span style="font-size:10.5px; color:#94a3b8; display:inline-block; margin-top:4px;">This is an automated system notification from GSSSB CBRT Exam Portal.</span>
+    </div>
+  </div>
+</body>
+</html>""", subtype='html')
+
         with smtplib.SMTP(host, port, timeout=10) as s:
             s.starttls()
             s.login(user, pwd)
             s.send_message(msg)
-        print(f"[EMAIL] Custom email sent to {email}")
+        print(f"[EMAIL] Custom branded email sent to {email}")
         return True
     except Exception as e:
         print(f"[EMAIL] Custom email send failed: {e}")
