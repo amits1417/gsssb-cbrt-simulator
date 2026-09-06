@@ -248,6 +248,46 @@
         max-width: 850px;
         margin: 0 auto 3rem auto;
     }
+
+    .checkout-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    .upi-app-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.4rem;
+    }
+
+    @media (max-width: 860px) {
+        .pricing-title {
+            font-size: 1.8rem;
+        }
+        .checkout-card {
+            padding: 1.25rem 1rem;
+            margin-bottom: 2rem;
+        }
+        .checkout-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1.5rem !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .pricing-title {
+            font-size: 1.5rem;
+        }
+        .checkout-card {
+            padding: 1rem 0.75rem;
+        }
+        .upi-app-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.5rem !important;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -396,7 +436,7 @@
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 2rem; align-items: start;">
+        <div class="checkout-grid">
             
             <!-- Left: Authentic Official Razorpay QR Code -->
             <div style="text-align: center; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">
@@ -451,7 +491,7 @@
                     </a>
 
                     <!-- Sub App Grid -->
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem;">
+                    <div class="upi-app-grid">
                         <a id="linkGpay" href="upi://pay?pa=amit109881.rzp@rxairtel&pn=AMIT&am=99.00&cu=INR&tn=GSSSB%20CCE%201%20Month%20Plan" class="btn btn-outline btn-sm" style="background: white; border: 1px solid #cbd5e1; font-size: 0.76rem; font-weight: 700; color: #1e293b; padding: 0.45rem 0.2rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px;">
                             <i class="fa-brands fa-google-pay" style="font-size: 1.25rem; color: #4285f4;"></i> GPay
                         </a>
