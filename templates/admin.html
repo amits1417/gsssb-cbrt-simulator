@@ -299,14 +299,14 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
             <div>
                 <h3 style="margin: 0;"><i class="fa-solid fa-headset" style="color: #0284c7; margin-right: 6px;"></i> Candidate Support Messages & Inbox</h3>
-                <span id="ticketsCountBadge" style="font-size: 0.82rem; color: #0284c7; font-weight: 600;">Showing Last 7 Days</span>
+                <span id="ticketsCountBadge" style="font-size: 0.82rem; color: #0284c7; font-weight: 600;">All Tickets</span>
             </div>
 
             <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
-                <button class="btn btn-outline btn-sm time-filter-btn active" data-subfilter="tickets" data-range="7days" onclick="filterTableByTime('tickets', '7days', this)">7 Days</button>
+                <button class="btn btn-outline btn-sm time-filter-btn active" data-subfilter="tickets" data-range="all" onclick="filterTableByTime('tickets', 'all', this)">All</button>
                 <button class="btn btn-outline btn-sm time-filter-btn" data-subfilter="tickets" data-range="today" onclick="filterTableByTime('tickets', 'today', this)">Today</button>
+                <button class="btn btn-outline btn-sm time-filter-btn" data-subfilter="tickets" data-range="7days" onclick="filterTableByTime('tickets', '7days', this)">7 Days</button>
                 <button class="btn btn-outline btn-sm time-filter-btn" data-subfilter="tickets" data-range="30days" onclick="filterTableByTime('tickets', '30days', this)">30 Days</button>
-                <button class="btn btn-outline btn-sm time-filter-btn" data-subfilter="tickets" data-range="all" onclick="filterTableByTime('tickets', 'all', this)">All</button>
             </div>
         </div>
 
@@ -1036,11 +1036,11 @@
         }
     }
 
-    // Default to Last 7 Days on page load
+    // Default filters on page load
     document.addEventListener('DOMContentLoaded', () => {
         filterTableByTime('payments', '7days');
         filterTableByTime('users', '7days');
-        filterTableByTime('tickets', '7days');
+        filterTableByTime('tickets', 'all');
     });
 </script>
 {% endblock %}
