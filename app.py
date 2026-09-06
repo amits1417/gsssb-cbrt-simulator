@@ -174,7 +174,8 @@ def auth_google_callback():
 def dashboard(user):
     settings = db.get_settings()
     stats = db.get_user_stats(user['id'])
-    return render_template('dashboard.html', user=user, stats=stats, settings=settings)
+    admin_messages = db.get_user_support_tickets(user['id'], user['email'])
+    return render_template('dashboard.html', user=user, stats=stats, settings=settings, admin_messages=admin_messages)
 
 @app.route('/leaderboard')
 def leaderboard_page():
@@ -867,13 +868,33 @@ def api_admin_reset_device(user):
     return jsonify({'success': True, 'message': msg})
 
 @app.route('/api/admin/user/<int:user_id>', methods=['GET'])
+@app.route('/api/admin/user/<int:user_id>/details', methods=['GET'])
 @admin_required
 def api_admin_user_details(user_id, user=None):
     details = db.get_user_full_details(user_id)
     if not details:
         return jsonify({'error': 'User not found'}), 404
-    return jsonify({'success': True, 'user': details['user'], 'payments': details['payments'],
-                   'attempts': details['attempts'], 'stats': details['stats']})
+    return jsonify({
+        'success': True,
+        'user': details['user'],
+        'payments': details['payments'],
+        'attempts': details['attempts'],
+        'stats': details['stats'],
+        'tickets': details.get('tickets', [])
+    })
+
+@app.route('/api/admin/user/<int:user_id>/send-message', methods=['POST'])
+@admin_required
+def api_admin_send_user_message(user_id, user=None):
+    data = request.get_json() or {}
+    message = data.get('message', '').strip()
+    category = data.get('category', 'Direct Message from Admin').strip()
+    if not message:
+        return jsonify({'error': 'Message cannot be empty.'}), 400
+    success, msg = db.send_direct_message_to_user(user_id, message, category)
+    if not success:
+        return jsonify({'error': msg}), 400
+    return jsonify({'success': True, 'message': msg})
 
 @app.route('/api/support/submit', methods=['POST'])
 def api_submit_support():

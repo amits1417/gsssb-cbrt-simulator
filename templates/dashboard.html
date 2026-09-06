@@ -68,6 +68,34 @@
     </div>
     {% endif %}
 
+    <!-- Admin Messages & Notices to Candidate -->
+    {% if admin_messages %}
+        {% for msg in admin_messages %}
+            {% if msg.admin_reply %}
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1.5px solid #86efac; border-radius: var(--radius-md); padding: 1.15rem 1.35rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 0.85rem; align-items: flex-start;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #10b981; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; margin-top: 2px;">
+                            <i class="fa-solid fa-bell"></i>
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 0.35rem;">
+                                <strong style="color: #065f46; font-size: 0.98rem;"><i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> Message from Administration</strong>
+                                <span style="font-size: 0.75rem; background: #dcfce7; color: #15803d; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">{{ msg.category }}</span>
+                                <span style="font-size: 0.75rem; color: #64748b;">{{ (msg.replied_at or msg.created_at)|string|truncate(16, True, '') }}</span>
+                            </div>
+                            <div style="color: #1e293b; font-size: 0.94rem; line-height: 1.55; font-weight: 500; white-space: pre-wrap;">{{ msg.admin_reply }}</div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="openGlobalSupportModal('history')" class="btn btn-outline btn-sm" style="background: white; border-color: #86efac; color: #047857; font-weight: 700; font-size: 0.8rem; padding: 0.4rem 0.8rem;">
+                        <i class="fa-solid fa-comments"></i> Support Inbox
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
     <!-- 4 Key Performance Metric Cards -->
     <div class="stats-cards-grid">
         <div class="stat-card">

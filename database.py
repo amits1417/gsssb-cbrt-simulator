@@ -1070,7 +1070,7 @@ def confirm_device_reset(email, otp, new_device_id=None, device_info=None, ip_ad
     }
 
 def get_user_full_details(user_id):
-    """Return full user record + all linked payments + test attempts + stats.
+    """Return full user record + all linked payments + test attempts + stats + tickets/messages.
     Everything is linked via user_id (the key used by payments & attempts)."""
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1086,8 +1086,10 @@ def get_user_full_details(user_id):
     cursor.execute('SELECT * FROM test_attempts WHERE user_id = ? ORDER BY id DESC', (user_id,))
     attempts = [dict(r) for r in cursor.fetchall()]
     stats = get_user_stats(user_id)
+    cursor.execute('SELECT * FROM support_tickets WHERE user_id = ? OR (email IS NOT NULL AND LOWER(email) = ?) ORDER BY id DESC', (user_id, (user.get('email') or '').lower()))
+    tickets = [dict(r) for r in cursor.fetchall()]
     conn.close()
-    return {'user': user, 'payments': payments, 'attempts': attempts, 'stats': stats}
+    return {'user': user, 'payments': payments, 'attempts': attempts, 'stats': stats, 'tickets': tickets}
 
 def get_user_by_uid(uid):
     conn = get_db_connection()
@@ -1595,7 +1597,53 @@ Portal: http://localhost:5000
     except Exception as e:
         pass
 
-    return True, "Reply sent successfully to candidate via Email & In-App Portal!"
+def send_direct_message_to_user(user_id, message, category="Direct Message from Admin"):
+    """Allow Admin to send a direct message/notice to a specific candidate user."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
+    u_row = cursor.fetchone()
+    if not u_row:
+        conn.close()
+        return False, "Candidate user not found."
+    user = dict(u_row)
+    now = datetime.datetime.now()
+    now_str = now.strftime('%Y-%m-%d %H:%M:%S')
+
+    cursor.execute('''
+        INSERT INTO support_tickets (user_id, name, email, phone, category, message, admin_reply, replied_at, status, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'resolved', ?)
+    ''', (user_id, user.get('name', 'Candidate'), user.get('email', ''), user.get('phone', ''), category, f"Admin Notice / Message to {user.get('name', 'Candidate')}", message.strip(), now_str, now_str))
+    ticket_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    # Send Email Notification to Candidate
+    u_email = user.get('email')
+    if u_email:
+        email_body = f"""Hello {user.get('name', 'Candidate')},
+
+You have received an official message from GSSSB CBRT Exam Portal Administration:
+
+--------------------------------------------------
+{message.strip()}
+--------------------------------------------------
+
+You can view your account status and mock tests anytime by logging in at:
+https://ccemock.online/dashboard
+
+Best regards,
+GSSSB CBRT Simulator Support Team"""
+        _send_custom_email(u_email, f"GSSSB CBRT Exam - Message from Admin (#{ticket_id})", email_body, user.get('name'))
+
+    # Send Telegram push notification to Admin
+    send_telegram_notification(f"""📤 <b>ADMIN SENT DIRECT MESSAGE</b>
+👤 <b>To:</b> {user.get('name')} (User #{user_id}, <code>{user.get('user_uid', 'N/A')}</code>)
+📧 <b>Email:</b> {user.get('email')}
+🏷️ <b>Category:</b> {category}
+💬 <b>Message:</b> {message.strip()[:250]}""")
+
+    return True, f"Message successfully sent to {user.get('name', 'Candidate')}! (Ticket #{ticket_id})"
 
 def get_user_support_tickets(user_id=None, email=None):
     """Retrieve support tickets submitted by a candidate."""
