@@ -204,9 +204,19 @@ def payment_page():
     settings = db.get_settings()
     return render_template('payment.html', user=user, settings=settings)
 
+@app.route('/topicwise')
+@app.route('/topics')
+def topicwise_page():
+    user = get_current_user()
+    return render_template('topicwise.html', user=user)
+
+@app.route('/topicwise_data.js')
+def serve_topicwise_data():
+    return send_from_directory('.', 'topicwise_data.js', mimetype='application/javascript')
+
 @app.route('/api/qr-code')
 def api_generate_qr_code():
-    amount = request.args.get('amount', '99').strip()
+    amount = request.args.get('amount', '59').strip()
     plan = request.args.get('plan', '1 Month Plan').strip()
     settings = db.get_settings()
     vpa = settings.get('upi_id', 'amit109881.rzp@rxairtel')
@@ -216,7 +226,7 @@ def api_generate_qr_code():
         amt_float = float(amount)
         amount_str = f"{amt_float:.2f}"
     except Exception:
-        amount_str = "99.00"
+        amount_str = "59.00"
         
     import urllib.parse
     note = f"GSSSB CCE {plan}"
@@ -795,7 +805,7 @@ def api_leaderboard():
 def api_payment_details():
     settings = db.get_settings()
     return jsonify({
-        'price': settings.get('subscription_price', '99'),
+        'price': settings.get('subscription_price', '59'),
         'upi_id': settings.get('upi_id', 'gsssbexams@upi'),
         'upi_name': settings.get('upi_name', 'GSSSB CBRT Mock Tests')
     })
@@ -806,7 +816,7 @@ def api_payment_submit(user):
     data = request.get_json() or {}
     utr_number = data.get('utr_number', '').strip()
     notes = data.get('notes', '').strip()
-    amount = float(data.get('amount', 99.0))
+    amount = float(data.get('amount', 59.0))
     plan_name = data.get('plan_name', '1 Month Plan')
     
     if not utr_number or len(utr_number) < 6:

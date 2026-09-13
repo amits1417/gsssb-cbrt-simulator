@@ -52,6 +52,7 @@
 
                 <ul class="nav-links">
                     <li><a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}"><i class="fa-solid fa-layer-group"></i> Mock Tests</a></li>
+                    <li><a href="/topicwise" class="nav-link {% if request.path == '/topicwise' %}active{% endif %}"><i class="fa-solid fa-book-open"></i> Topic-wise Bank</a></li>
                     <li><a href="/leaderboard" class="nav-link {% if request.path == '/leaderboard' %}active{% endif %}"><i class="fa-solid fa-trophy"></i> Leaderboard</a></li>
                     <li><a href="/pricing" class="nav-link {% if request.path in ['/pricing', '/payment'] %}active{% endif %}"><i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Pricing & Plans</a></li>
                     {% if user %}

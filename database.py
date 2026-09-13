@@ -360,7 +360,7 @@ def init_db():
 
     # Insert default settings if not exists
     default_settings = [
-        ('subscription_price', '99'),
+        ('subscription_price', '59'),
         ('upi_id', 'amit109881.rzp@rxairtel'),
         ('upi_name', 'AMIT (cce)'),
         ('free_papers_count', '2'),
@@ -369,7 +369,7 @@ def init_db():
     ]
     for key, val in default_settings:
         cursor.execute('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', (key, val))
-    cursor.execute("UPDATE settings SET value = '99' WHERE key = 'subscription_price' AND value IN ('300', '299')")
+    cursor.execute("UPDATE settings SET value = '59' WHERE key = 'subscription_price' AND value IN ('300', '299', '99')")
         
     # Create default Admin if not exists
     admin_email = 'admin@gsssb.com'
@@ -1324,7 +1324,7 @@ def get_leaderboard(limit=50):
 
 # ----------------- Payment & Admin Functions -----------------
 
-def create_payment_request(user_id, utr_number, amount=99.0, payment_method='UPI', notes=''):
+def create_payment_request(user_id, utr_number, amount=59.0, payment_method='UPI', notes=''):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
@@ -1370,11 +1370,11 @@ def approve_payment(payment_id):
     user_id = row['user_id']
     amount = float(row['amount'])
     
-    # Calculate days based on plan amount
+    # Calculate days based on plan amount: 59 (30d), 129 (90d), 229 (180d)
     days = 30
-    if amount >= 399:
+    if amount >= 200:
         days = 180
-    elif amount >= 199:
+    elif amount >= 100:
         days = 90
     else:
         days = 30
@@ -1398,7 +1398,7 @@ def approve_payment(payment_id):
     conn.close()
     return True
 
-def toggle_user_subscription(user_id, is_paid, days=30, plan_name='Manual Admin Plan', amount=99):
+def toggle_user_subscription(user_id, is_paid, days=30, plan_name='Manual Admin Plan', amount=59):
     conn = get_db_connection()
     cursor = conn.cursor()
     if is_paid:

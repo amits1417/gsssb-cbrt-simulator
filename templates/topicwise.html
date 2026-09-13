@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}ટોપિક-વાઇઝ પ્રશ્ન બેંક (૭૧ પેપર્સ) | GSSSB CCE Topic-Wise Question Bank{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="/static/css/topicwise.css">
+{% endblock %}
+
+{% block content %}
+<div class="tw-app">
+
+    <!-- Sticky Subject Header Bar -->
+    <div class="tw-subject-bar">
+        <div class="tw-subject-container">
+            <div class="tw-title-group">
+                <div class="tw-title-icon">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <div>
+                    <h1>GSSSB CCE ટોપિક-વાઇઝ પ્રશ્ન બેંક (૭૧ પેપર્સ)</h1>
+                    <p>ઓરિજિનલ Answer Key, પેપર નંબર, શિફ્ટ અને તારીખ સાથે વિગતવાર વર્ગીકરણ</p>
+                </div>
+            </div>
+
+            <!-- Subject Selector Tabs -->
+            <div class="tw-subject-tabs" id="twSubjectTabs">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Layout -->
+    <div class="tw-layout">
+
+        <!-- Left Sidebar: Topics List with Question Count -->
+        <aside class="tw-sidebar">
+            <div class="tw-sidebar-header">
+                <h3><i class="fa-solid fa-list-check" style="color: var(--primary);"></i> તમામ ટોપિક્સ (Topics)</h3>
+                <span class="tw-sidebar-count" id="twSidebarCount">...</span>
+            </div>
+            <div class="tw-topics-list" id="twTopicsList">
+                <!-- Dynamically populated -->
+            </div>
+        </aside>
+
+        <!-- Right Main Workspace -->
+        <main class="tw-content">
+
+            <!-- Control Toolbar -->
+            <div class="tw-toolbar">
+                <div class="tw-toolbar-row-1">
+                    <div class="tw-active-topic-title">
+                        <h2 id="twActiveTopicTitle">
+                            <i class="fa-solid fa-spinner fa-spin"></i> લોડ થઈ રહ્યું છે...
+                        </h2>
+                        <span id="twActiveTopicMeta">કુલ પ્રશ્નો લોડ થઈ રહ્યા છે...</span>
+                    </div>
+
+                    <!-- Practice Mode (Default - Answers Hidden) vs Study Mode Toggle -->
+                    <div class="tw-mode-toggle">
+                        <button type="button" class="tw-mode-btn active" id="twModePractice" title="પ્રેક્ટિસ મોડ: ક્લિક કર્યા પછી જ જવાબ દેખાશે">
+                            <i class="fa-solid fa-pencil"></i> પ્રેક્ટિસ મોડ (જવાબ છુપાયેલ)
+                        </button>
+                        <button type="button" class="tw-mode-btn" id="twModeStudy" title="બધા જવાબ એકસાથે જોવા માટે">
+                            <i class="fa-solid fa-book-open-reader"></i> બધા જવાબ જુઓ (Show All)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tw-toolbar-row-2">
+                    <div class="tw-filter-group">
+                        <!-- Paper Selector -->
+                        <select class="tw-select" id="twPaperFilter" title="Filter by Specific Paper">
+                            <option value="ALL">તમામ ૭૧ પેપર્સ (All Papers)</option>
+                        </select>
+
+                        <!-- Search Bar -->
+                        <div class="tw-search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" class="tw-search-input" id="twSearchInput" placeholder="પ્રશ્ન અથવા કીવર્ડ શોધો...">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button type="button" class="tw-btn-action" id="twBookmarkFilterBtn" title="View Bookmarked Questions">
+                            <i class="fa-solid fa-star" style="color: #f59e0b;"></i> સાચવેલા પ્રશ્નો
+                        </button>
+                        <button type="button" class="tw-btn-action" id="twPrintBtn" title="Print this Topic Question Set">
+                            <i class="fa-solid fa-print"></i> પ્રિન્ટ / PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Questions Stream List -->
+            <div class="tw-questions-stream" id="twQuestionsStream">
+                <!-- Dynamically rendered question cards -->
+            </div>
+
+            <!-- Pagination -->
+            <div class="tw-pagination" id="twPagination"></div>
+
+        </main>
+    </div>
+
+    <!-- Image Zoom Modal -->
+    <div class="tw-modal" id="twZoomModal">
+        <div class="tw-modal-content">
+            <button type="button" class="tw-modal-close" id="twModalClose"><i class="fa-solid fa-xmark"></i></button>
+            <img class="tw-modal-img" id="twModalImg" src="" alt="Zoomed Question View">
+        </div>
+    </div>
+
+</div>
+
+<!-- Load Topicwise Database and Logic -->
+<script src="/topicwise_data.js"></script>
+<script src="/static/js/topicwise.js"></script>
+{% endblock %}
