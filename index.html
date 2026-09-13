@@ -115,16 +115,8 @@
             break-inside: avoid;
         }
 
-        @media print {
-            body, html { height: auto !important; overflow: visible !important; background: white !important; }
-            .exam-header, .main-container, .modal-overlay, .home-screen, .results-export-actions, .filter-tab-container, .jump-palette-grid, .results-bottom-nav, #btnToggleJumpPalette { display: none !important; }
-            #resultsScreen { display: block !important; position: static !important; inset: auto !important; background: white !important; padding: 0 !important; }
-            .results-container { max-width: 100% !important; box-shadow: none !important; border: none !important; padding: 10px !important; }
-            .review-card { page-break-inside: avoid !important; break-inside: avoid !important; border: 1.5px solid #cbd5e1 !important; margin-bottom: 20px !important; }
-        }
-
         /* Desktop Mode (>900px) */
-        @media (min-width: 901px) {
+        @media screen and (min-width: 901px) {
             .top-quick-actions {
                 display: none !important;
             }
@@ -137,7 +129,7 @@
         }
 
         /* Mobile Mode (<=900px) - Action buttons directly beneath Option E */
-        @media (max-width: 900px) {
+        @media screen and (max-width: 900px) {
             html, body {
                 height: 100% !important;
                 height: 100dvh !important;
@@ -235,6 +227,103 @@
                 border: none !important;
                 opacity: 0 !important;
                 pointer-events: none !important;
+            }
+        }
+
+        /* ========================================================
+           FULL SOLUTION PRINT & PDF EXPORT STYLESHEET (ALL 100 MCQs)
+           ======================================================== */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 12mm 10mm 15mm 10mm;
+            }
+
+            *, *:before, *:after {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+            }
+
+            html, body {
+                height: auto !important;
+                min-height: auto !important;
+                width: 100% !important;
+                overflow: visible !important;
+                position: static !important;
+                background: #ffffff !important;
+                color: #0f172a !important;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+                font-size: 13pt !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Hide all interactive app chrome & exam UI */
+            .exam-header, 
+            .main-container, 
+            .modal-overlay, 
+            .home-screen, 
+            #homeScreen,
+            #examScreen,
+            .top-quick-actions,
+            .question-inline-actions,
+            .exam-footer,
+            footer,
+            .results-export-actions, 
+            .filter-tab-container, 
+            .jump-palette-grid, 
+            .results-bottom-nav, 
+            #btnToggleJumpPalette,
+            #sidebarToggleBtn {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+            }
+
+            /* Display Results Container at Full Page Width and Natural Height */
+            #resultsScreen {
+                display: block !important;
+                position: static !important;
+                inset: auto !important;
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                width: 100% !important;
+                height: auto !important;
+                z-index: auto !important;
+            }
+
+            .results-container {
+                max-width: 100% !important;
+                width: 100% !important;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* Always show every question review card in print */
+            .review-card {
+                display: block !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid-page !important;
+                border: 1.5px solid #cbd5e1 !important;
+                border-radius: 8px !important;
+                margin-bottom: 22px !important;
+                padding: 16px 20px !important;
+                background: #ffffff !important;
+            }
+
+            .review-card img {
+                max-width: 100% !important;
+                height: auto !important;
+                display: block !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
         }
     </style>
@@ -456,8 +545,8 @@
 
                 <!-- Export & Print Action Buttons -->
                 <div class="results-export-actions" style="display: flex; gap: 12px; flex-wrap: wrap;">
-                    <button class="btn-export-pdf" onclick="window.print()" title="Print or Save full solution paper as PDF">
-                        <i class="fa-solid fa-print"></i> Print / Save PDF Solution
+                    <button class="btn-export-pdf" onclick="printFullSolution()" title="Print or Save full 100 MCQs solution paper as PDF">
+                        <i class="fa-solid fa-print"></i> Print / Save Complete Solution PDF
                     </button>
                 </div>
             </div>

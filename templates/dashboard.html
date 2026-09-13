@@ -2,6 +2,86 @@
 
 {% block title %}Candidate Dashboard & Analytics - GSSSB CCE{% endblock %}
 
+{% block extra_head %}
+<style>
+/* Dashboard Attempt Review Print Stylesheet */
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 12mm 10mm 15mm 10mm;
+    }
+    *, *:before, *:after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+    html, body {
+        height: auto !important;
+        min-height: auto !important;
+        width: 100% !important;
+        overflow: visible !important;
+        position: static !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    nav, header, footer, .navbar, .site-footer, .user-profile-banner, .stats-grid, .charts-container, .card, .container > div:not(.modal-overlay), button {
+        display: none !important;
+    }
+    .modal-overlay#reviewModal {
+        position: static !important;
+        display: block !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        z-index: auto !important;
+    }
+    .modal-box {
+        max-width: 100% !important;
+        width: 100% !important;
+        max-height: none !important;
+        height: auto !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+    }
+    #modalQuestionsReviewList {
+        overflow: visible !important;
+        max-height: none !important;
+        height: auto !important;
+        padding: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1.25rem !important;
+    }
+    #modalQuestionsReviewList > div {
+        page-break-inside: avoid !important;
+        break-inside: avoid-page !important;
+        display: block !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        margin-bottom: 20px !important;
+        padding: 16px 20px !important;
+    }
+    img {
+        max-width: 100% !important;
+        height: auto !important;
+        display: block !important;
+        page-break-inside: avoid !important;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
 
@@ -219,7 +299,7 @@
                 <p style="margin: 2px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">Official Solution Paper & Candidate Response Review</p>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-                <button onclick="window.print()" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 6px;" title="Print or Save Review as PDF">
+                <button onclick="printAttemptReview()" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 6px;" title="Print or Save Review as PDF">
                     <i class="fa-solid fa-print"></i> Print / PDF
                 </button>
                 <button onclick="closeReviewModal()" class="btn btn-outline btn-sm"><i class="fa-solid fa-xmark"></i></button>
@@ -453,6 +533,18 @@
 
     function closeReviewModal() {
         document.getElementById('reviewModal').classList.remove('active');
+    }
+
+    function printAttemptReview() {
+        const prevTitle = document.title;
+        const examTitle = document.getElementById('modalExamTitle') ? document.getElementById('modalExamTitle').innerText : 'Attempt_Review';
+        document.title = `GSSSB_${examTitle.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+        setTimeout(() => {
+            window.print();
+            setTimeout(() => {
+                document.title = prevTitle;
+            }, 1000);
+        }, 150);
     }
 </script>
 {% endblock %}

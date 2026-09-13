@@ -633,3 +633,37 @@ function backToHome() {
     document.getElementById("homeScreen").style.display = "block";
     initExamSelection();
 }
+
+function printFullSolution() {
+    // 1. Reveal all 100 questions (reset any active filter tab)
+    const cards = document.querySelectorAll(".review-card");
+    cards.forEach(card => {
+        card.style.display = "block";
+    });
+
+    const filterBtns = document.querySelectorAll(".filter-tab-btn");
+    filterBtns.forEach(b => b.classList.remove("active"));
+    const fAll = document.getElementById("filterAllBtn");
+    if (fAll) fAll.classList.add("active");
+
+    // 2. Set clean document title for the saved PDF filename
+    const prevTitle = document.title;
+    const paperName = (latestReviewData && latestReviewData.paper_id) ? latestReviewData.paper_id : (selectedExamId || 'Mock_Exam');
+    document.title = `GSSSB_${paperName}_Official_Solution_Paper`;
+
+    // 3. Trigger print / PDF export
+    setTimeout(() => {
+        window.print();
+        setTimeout(() => {
+            document.title = prevTitle;
+        }, 1000);
+    }, 150);
+}
+
+// Global hook to guarantee all questions are unhidden if user triggers print via shortcut or browser menu
+window.addEventListener('beforeprint', () => {
+    const cards = document.querySelectorAll(".review-card");
+    cards.forEach(card => {
+        card.style.display = "block";
+    });
+});

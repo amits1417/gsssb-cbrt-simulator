@@ -270,43 +270,6 @@
             }
         }
 
-        /* PRINT STYLESHEET */
-        @media print {
-            body, html {
-                height: auto !important;
-                overflow: visible !important;
-                background: white !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            .exam-header, .main-container, .modal-overlay, .results-export-actions, .filter-tab-container, .jump-palette-grid, .results-bottom-nav, #btnToggleJumpPalette {
-                display: none !important;
-            }
-            #resultsScreen {
-                display: block !important;
-                position: static !important;
-                inset: auto !important;
-                background: white !important;
-                padding: 0 !important;
-                overflow: visible !important;
-                z-index: auto !important;
-            }
-            .results-container {
-                max-width: 100% !important;
-                box-shadow: none !important;
-                border: none !important;
-                padding: 10px !important;
-                margin: 0 !important;
-            }
-            .review-card {
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-                box-shadow: none !important;
-                border: 1.5px solid #cbd5e1 !important;
-                margin-bottom: 20px !important;
-            }
-        }
-
         .btn-text-short {
             display: none;
         }
@@ -315,7 +278,7 @@
         }
 
         /* Desktop Mode (>900px) */
-        @media (min-width: 901px) {
+        @media screen and (min-width: 901px) {
             .top-quick-actions {
                 display: none !important;
             }
@@ -328,7 +291,7 @@
         }
 
         /* Mobile Mode (<=900px) - Action buttons positioned high up right below Option E */
-        @media (max-width: 900px) {
+        @media screen and (max-width: 900px) {
             html, body {
                 height: 100% !important;
                 height: 100dvh !important;
@@ -461,9 +424,20 @@
                 touch-action: manipulation !important;
                 cursor: pointer !important;
             }
+
+            /* Ensure Options are instantly clickable with maximum sensitivity */
+            .option-row,
+            .option-row input[type="radio"],
+            .option-row label,
+            .option-row img,
+            .option-row span {
+                pointer-events: auto !important;
+                touch-action: manipulation !important;
+                cursor: pointer !important;
+            }
         }
 
-        @media (max-width: 500px) {
+        @media screen and (max-width: 500px) {
             .btn-text-full {
                 display: none !important;
             }
@@ -480,7 +454,7 @@
             }
         }
 
-        @media (max-width: 380px) {
+        @media screen and (max-width: 380px) {
             .footer-row-mobile .btn-tcs {
                 font-size: 10.5px !important;
                 padding: 7px 2px !important;
@@ -488,6 +462,102 @@
             }
             #btnSaveNext {
                 font-size: 11px !important;
+            }
+        }
+
+        /* ========================================================
+           FULL SOLUTION PRINT & PDF EXPORT STYLESHEET (ALL 100 MCQs)
+           ======================================================== */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 12mm 10mm 15mm 10mm;
+            }
+
+            *, *:before, *:after {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+            }
+
+            html, body {
+                height: auto !important;
+                min-height: auto !important;
+                width: 100% !important;
+                overflow: visible !important;
+                position: static !important;
+                background: #ffffff !important;
+                color: #0f172a !important;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+                font-size: 13pt !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Hide all interactive exam chrome and navigation */
+            .exam-header, 
+            .main-container, 
+            .modal-overlay, 
+            #instructionScreen,
+            #examScreen,
+            .top-quick-actions, 
+            .question-inline-actions,
+            .exam-footer, 
+            footer,
+            .results-export-actions, 
+            .filter-tab-container, 
+            .jump-palette-grid, 
+            .results-bottom-nav, 
+            #btnToggleJumpPalette,
+            #sidebarToggleBtn {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+            }
+
+            /* Display Results Container at Full Page Width and Natural Height */
+            #resultsScreen {
+                display: block !important;
+                position: static !important;
+                inset: auto !important;
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                width: 100% !important;
+                height: auto !important;
+                z-index: auto !important;
+            }
+
+            .results-container {
+                max-width: 100% !important;
+                width: 100% !important;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* Always show every question review card in print */
+            .review-card {
+                display: block !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid-page !important;
+                border: 1.5px solid #cbd5e1 !important;
+                border-radius: 8px !important;
+                margin-bottom: 22px !important;
+                padding: 16px 20px !important;
+                background: #ffffff !important;
+            }
+
+            .review-card img, .review-guj-img, .review-option-img {
+                max-width: 100% !important;
+                height: auto !important;
+                display: block !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
         }
     </style>
@@ -968,8 +1038,8 @@
 
                 <!-- Export & Print Action Buttons -->
                 <div class="results-export-actions">
-                    <button class="btn-export-pdf" onclick="window.print()" title="Print or Save full solution paper as PDF">
-                        <i class="fa-solid fa-print"></i> Print / Save PDF Solution
+                    <button class="btn-export-pdf" onclick="printFullSolution()" title="Print or Save full 100 MCQs solution paper as PDF">
+                        <i class="fa-solid fa-print"></i> Print / Save Complete Solution PDF
                     </button>
                 </div>
             </div>
@@ -1635,6 +1705,40 @@
                 } catch (e) {}
             }, 25000);
         }
+
+        function printFullSolution() {
+            // 1. Reveal all 100 questions (reset any active filter tab)
+            const cards = document.querySelectorAll(".review-card");
+            cards.forEach(card => {
+                card.style.display = "block";
+            });
+
+            const filterBtns = document.querySelectorAll(".filter-tab-btn");
+            filterBtns.forEach(b => b.classList.remove("active"));
+            const fAll = document.getElementById("filterAllBtn");
+            if (fAll) fAll.classList.add("active");
+
+            // 2. Set clean document title for the saved PDF filename
+            const prevTitle = document.title;
+            const paperName = '{{ paper_id }}' || (latestReviewData && latestReviewData.paper_id) || 'Mock_Exam';
+            document.title = `GSSSB_${paperName}_Official_Solution_Paper`;
+
+            // 3. Trigger print / PDF export
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => {
+                    document.title = prevTitle;
+                }, 1000);
+            }, 150);
+        }
+
+        // Global hook to guarantee all questions are unhidden if user triggers print via shortcut or browser menu
+        window.addEventListener('beforeprint', () => {
+            const cards = document.querySelectorAll(".review-card");
+            cards.forEach(card => {
+                card.style.display = "block";
+            });
+        });
     </script>
 </body>
 </html>

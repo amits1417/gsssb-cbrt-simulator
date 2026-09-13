@@ -538,7 +538,7 @@ html, body {
 /* RESPONSIVE DESIGN FOR MOBILE & TABLETS (<= 900px)         */
 /* ========================================================= */
 
-@media (max-width: 900px) {
+@media screen and (max-width: 900px) {
     .hide-desktop {
         display: inline-flex !important;
     }
@@ -745,7 +745,7 @@ html, body {
     }
 }
 
-@media (max-width: 500px) {
+@media screen and (max-width: 500px) {
     .btn-text-full {
         display: none !important;
     }
@@ -762,7 +762,7 @@ html, body {
     }
 }
 
-@media (max-width: 380px) {
+@media screen and (max-width: 380px) {
     .footer-row-mobile .btn-tcs {
         font-size: 10.5px;
         padding: 7px 2px;
@@ -1107,7 +1107,7 @@ html, body {
     opacity: 0.65;
 }
 
-@media (max-width: 768px) {
+@media screen and (max-width: 768px) {
     .instruction-header {
         padding: 10px 14px;
         flex-direction: column;
@@ -1140,7 +1140,7 @@ html, body {
     }
 }
 
-@media (max-width: 480px) {
+@media screen and (max-width: 480px) {
     .inst-summary-grid {
         grid-template-columns: 1fr;
     }
