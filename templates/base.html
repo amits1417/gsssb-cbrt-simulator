@@ -261,7 +261,12 @@
 
         async function handleLogout() {
             try {
-                const res = await fetch('/api/auth/logout', { method: 'POST' });
+                localStorage.removeItem('session_token');
+                document.cookie = "session_token=; path=/; max-age=0";
+                const token = localStorage.getItem('session_token') || '';
+                const headers = { 'X-Device-Id': getDeviceId() };
+                if (token) headers['X-Session-Token'] = token;
+                await fetch('/api/auth/logout', { method: 'POST', headers: headers });
                 window.location.href = '/';
             } catch (err) {
                 window.location.href = '/';
@@ -272,17 +277,22 @@
         {% if user %}
         setInterval(async () => {
             try {
+                const token = localStorage.getItem('session_token') || '';
+                const headers = { 'X-Device-Id': getDeviceId() };
+                if (token) headers['X-Session-Token'] = token;
                 const res = await fetch('/api/auth/heartbeat', {
                     method: 'POST',
-                    headers: { 'X-Device-Id': getDeviceId() }
+                    headers: headers
                 });
                 if (res.status === 401) {
                     const data = await res.json();
+                    localStorage.removeItem('session_token');
+                    document.cookie = "session_token=; path=/; max-age=0";
                     alert(data.error || 'You have been logged out because another device logged into this account.');
                     window.location.href = '/auth';
                 }
             } catch (e) {}
-        }, 20000); // check every 20 seconds
+        }, 25000); // check every 25 seconds
         {% endif %}
 
         // Global Support & Device Reset Handlers

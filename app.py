@@ -18,6 +18,20 @@ app = Flask(
 )
 app.secret_key = os.environ.get('SECRET_KEY', 'gsssb_cbrt_super_secret_key_2026_x89f21')
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(days=60)
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+
+def set_auth_cookie(response, token):
+    if token:
+        response.set_cookie(
+            'session_token',
+            token,
+            max_age=60 * 24 * 3600,
+            httponly=True,
+            samesite='Lax'
+        )
+    return response
 
 # Ensure directories exist safely (avoid crash on read-only serverless filesystems)
 try:
@@ -39,8 +53,8 @@ def add_no_cache_headers(response):
 # ----------------- Helper Decorators -----------------
 
 def get_current_user():
-    # Check session cookie or Authorization header
-    token = session.get('session_token') or request.headers.get('X-Session-Token')
+    # Check session cookie, Authorization header, or session_token cookie
+    token = session.get('session_token') or request.headers.get('X-Session-Token') or request.cookies.get('session_token')
     if not token:
         return None
     return db.get_user_by_session(token)
@@ -272,13 +286,15 @@ def api_signup():
     if not user:
         return jsonify({'error': token_or_err}), 400
         
+    session.permanent = True
     session['session_token'] = token_or_err
-    return jsonify({
+    resp = jsonify({
         'success': True,
         'message': 'Account created successfully! Welcome to GSSSB Mock Tests.',
         'user': user,
         'token': token_or_err
     })
+    return set_auth_cookie(resp, token_or_err)
 
 @app.route('/api/auth/forgot-password/request', methods=['POST'])
 def api_forgot_password_request():
@@ -316,13 +332,15 @@ def api_forgot_password_reset():
     if result['status'] == 'ERROR':
         return jsonify({'error': result['message']}), 400
         
+    session.permanent = True
     session['session_token'] = result['token']
-    return jsonify({
+    resp = jsonify({
         'success': True,
         'message': 'Password reset successfully! Logging you in...',
         'user': result['user'],
         'token': result['token']
     })
+    return set_auth_cookie(resp, result['token'])
 
 @app.route('/api/auth/login', methods=['POST'])
 def api_login():
@@ -349,13 +367,15 @@ def api_login():
             'dev_otp': result.get('dev_otp')
         }), 200
         
+    session.permanent = True
     session['session_token'] = result['token']
-    return jsonify({
+    resp = jsonify({
         'success': True,
         'message': 'Logged in successfully!',
         'user': result['user'],
         'token': result['token']
     })
+    return set_auth_cookie(resp, result['token'])
 
 @app.route('/api/auth/verify-otp', methods=['POST'])
 def api_verify_otp():
@@ -373,13 +393,15 @@ def api_verify_otp():
     if result['status'] == 'ERROR':
         return jsonify({'error': result['message']}), 401
         
+    session.permanent = True
     session['session_token'] = result['token']
-    return jsonify({
+    resp = jsonify({
         'success': True,
         'message': 'Device authorized! Logged in successfully.',
         'user': result['user'],
         'token': result['token']
     })
+    return set_auth_cookie(resp, result['token'])
 
 @app.route('/api/auth/google', methods=['POST'])
 def api_auth_google():
@@ -409,13 +431,15 @@ def api_auth_google():
     if res.get('status') == 'ERROR':
         return jsonify({'error': res.get('message', 'Login blocked')}), 401
 
+    session.permanent = True
     session['session_token'] = res['token']
-    return jsonify({
+    resp = jsonify({
         'success': True,
         'message': 'Google Sign-In successful!',
         'user': res['user'],
         'token': res['token']
     })
+    return set_auth_cookie(resp, res['token'])
 
 @app.route('/api/auth/resend-otp', methods=['POST'])
 def api_resend_otp():
@@ -467,13 +491,15 @@ def api_confirm_device_reset():
     if result['status'] == 'ERROR':
         return jsonify({'error': result['message']}), 400
         
+    session.permanent = True
     session['session_token'] = result['token']
-    return jsonify({
+    resp = jsonify({
         'success': True,
         'message': result['message'],
         'user': result['user'],
         'token': result['token']
     })
+    return set_auth_cookie(resp, result['token'])
 
 @app.route('/api/auth/google', methods=['POST'])
 def api_google_auth():
@@ -508,11 +534,12 @@ def api_google_auth():
         return jsonify({'error': 'Google account email not found'}), 400
 
     user, token, is_new = db.google_auth_user(email, name, google_id, avatar_url, phone, device_info, ip_addr, data.get('device_id'))
+    session.permanent = True
     session['session_token'] = token
 
     needs_phone = not bool(user.get('phone') and len(user.get('phone')) >= 10)
 
-    return jsonify({
+    resp = jsonify({
         'success': True,
         'message': 'Google Sign-In successful!',
         'user': user,
@@ -520,6 +547,7 @@ def api_google_auth():
         'is_new': is_new,
         'needs_phone': needs_phone
     })
+    return set_auth_cookie(resp, token)
 
 @app.route('/api/auth/update-phone', methods=['POST'])
 @login_required
@@ -540,26 +568,29 @@ def api_me():
 
 @app.route('/api/auth/heartbeat', methods=['POST'])
 def api_heartbeat():
-    token = session.get('session_token') or request.headers.get('X-Session-Token')
-    device_id = request.headers.get('X-Device-Id') or (request.get_json() or {}).get('device_id')
+    token = session.get('session_token') or request.headers.get('X-Session-Token') or request.cookies.get('session_token')
     if not token:
         return jsonify({'status': 'invalid', 'error': 'No session token provided'}), 401
-    user = db.get_user_by_session(token, device_id)
+    user = db.get_user_by_session(token)
     if not user:
         # Session was revoked because user logged in from another device/browser!
         session.clear()
-        return jsonify({
+        resp = jsonify({
             'status': 'session_revoked',
             'error': 'You have been logged out because this account was logged in from another device.'
-        }), 401
+        })
+        resp.delete_cookie('session_token')
+        return resp, 401
     return jsonify({'status': 'active', 'user_id': user['id'], 'is_paid': user['is_paid']})
 
 @app.route('/api/auth/logout', methods=['POST'])
 def api_logout():
-    token = session.get('session_token') or request.headers.get('X-Session-Token')
+    token = session.get('session_token') or request.headers.get('X-Session-Token') or request.cookies.get('session_token')
     db.logout_user(token)
     session.clear()
-    return jsonify({'success': True, 'message': 'Logged out successfully.'})
+    resp = jsonify({'success': True, 'message': 'Logged out successfully.'})
+    resp.delete_cookie('session_token')
+    return resp
 
 # ----------------- Exams API Endpoints -----------------
 

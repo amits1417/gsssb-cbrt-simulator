@@ -326,6 +326,10 @@
             });
             const data = await res.json();
             if (res.ok && data.success) {
+                if (data.token) {
+                    localStorage.setItem('session_token', data.token);
+                    document.cookie = "session_token=" + data.token + "; path=/; max-age=5184000; SameSite=Lax";
+                }
                 showToast('Login successful!', 'success');
                 const nextUrl = urlParams.get('next') || '/dashboard';
                 setTimeout(() => window.location.href = nextUrl, 800);
@@ -384,6 +388,10 @@
             });
             const data = await res.json();
             if (res.ok && data.success) {
+                if (data.token) {
+                    localStorage.setItem('session_token', data.token);
+                    document.cookie = "session_token=" + data.token + "; path=/; max-age=5184000; SameSite=Lax";
+                }
                 showToast('Device authorized!', 'success');
                 const nextUrl = urlParams.get('next') || '/dashboard';
                 setTimeout(() => window.location.href = nextUrl, 800);
@@ -457,7 +465,11 @@
                 body: JSON.stringify({ name, email, phone, password, device_id: getDeviceId() })
             });
             const data = await res.json();
-            if (res.ok) {
+            if (res.ok && data.success) {
+                if (data.token) {
+                    localStorage.setItem('session_token', data.token);
+                    document.cookie = "session_token=" + data.token + "; path=/; max-age=5184000; SameSite=Lax";
+                }
                 showToast('Account created successfully!', 'success');
                 setTimeout(() => window.location.href = '/dashboard', 800);
             } else {
@@ -580,6 +592,10 @@
             });
             const data = await res.json();
             if (res.ok && data.success) {
+                if (data.token) {
+                    localStorage.setItem('session_token', data.token);
+                    document.cookie = "session_token=" + data.token + "; path=/; max-age=5184000; SameSite=Lax";
+                }
                 showToast(data.message, 'success');
                 setTimeout(() => window.location.href = '/dashboard', 800);
             } else {
@@ -660,6 +676,10 @@
             });
             const data = await res.json();
             if (res.ok && data.success) {
+                if (data.token) {
+                    localStorage.setItem('session_token', data.token);
+                    document.cookie = "session_token=" + data.token + "; path=/; max-age=5184000; SameSite=Lax";
+                }
                 showToast(data.message, 'success');
                 const nextUrl = urlParams.get('next') || '/dashboard';
                 setTimeout(() => window.location.href = nextUrl, 800);

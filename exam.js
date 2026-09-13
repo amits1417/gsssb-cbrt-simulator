@@ -390,6 +390,7 @@ function submitExam() {
     let correct = 0;
     let incorrect = 0;
     let unattempted = 0;
+    const reviewDataList = [];
     
     const reviewContainer = document.getElementById("reviewContainer");
     reviewContainer.innerHTML = "";
@@ -421,119 +422,210 @@ function submitExam() {
             scoreForQuestion = -0.25;
         }
         
-        // Build review card details
-        let cardBorderColor = "#7f8c8d"; // Gray for unattempted/cancelled
-        let cardBgColor = "#f1f2f6";
-        let statusColor = "#7f8c8d";
-        let statusText = `Unattempted (Score: 0.00)`;
-        
-        if (isCancelled) {
-            statusText = `Cancelled Question (Score: 0.00)`;
-        } else if (isCorrect) {
-            cardBorderColor = "#20bf6b"; // Green
-            cardBgColor = "#e3fcef";
-            statusColor = "#20bf6b";
-            statusText = `Correct (Score: +1.00)`;
-        } else if (!isUnattempted) {
-            cardBorderColor = "#eb3b5a"; // Red
-            cardBgColor = "#ffeef0";
-            statusColor = "#eb3b5a";
-            statusText = `Incorrect (Score: -0.25)`;
-        }
-        
-        // Generate options review UI
-        let optionsHtml = "";
-        
-        if (isCancelled) {
-            optionsHtml = `<div style="padding: 10px; border: 1.5px dashed #eb3b5a; background-color: #ffeef0; color: #eb3b5a; font-weight: bold; border-radius: 4px;">Discrepancy found. This question is ignored for all candidates.</div>`;
+        let status = isCancelled ? 'cancelled' : (isCorrect ? 'correct' : (isUnattempted ? 'unattempted' : 'incorrect'));
+        reviewDataList.push({
+            number: q.number,
+            id: q.id || '',
+            english_prompt: q.english_prompt || '',
+            gujarati_prompt_path: q.gujarati_prompt_path || '',
+            options: q.options || [],
+            user_ans: userAns,
+            correct_ans: isCancelled ? null : correctAns,
+            is_cancelled: isCancelled,
+            is_correct: isCorrect,
+            status: status
+        });
+    });
+
+    latestReviewData = {
+        paper_id: currentExamId,
+        total_questions: totalQuestions,
+        correct_count: correct,
+        incorrect_count: incorrect,
+        unattempted_count: unattempted,
+        net_score: (correct * 1.0 - incorrect * 0.25).toFixed(2),
+        review: reviewDataList
+    };
+
+    renderExamResultsUI(latestReviewData);
+}
+
+let latestReviewData = null;
+
+function toggleJumpGrid() {
+    const grid = document.getElementById("jumpPaletteContainer");
+    const icon = document.getElementById("jumpToggleIcon");
+    if (!grid) return;
+    if (grid.style.display === "none") {
+        grid.style.display = "grid";
+        if (icon) icon.className = "fa-solid fa-chevron-up";
+    } else {
+        grid.style.display = "none";
+        if (icon) icon.className = "fa-solid fa-chevron-down";
+    }
+}
+
+function filterReviewQuestions(type, btnElem) {
+    document.querySelectorAll(".filter-tab-btn").forEach(b => b.classList.remove("active"));
+    if (btnElem) btnElem.classList.add("active");
+
+    const cards = document.querySelectorAll(".review-card");
+    cards.forEach(card => {
+        const cardStatus = card.getAttribute("data-status");
+        if (type === 'all') {
+            card.style.display = "block";
+        } else if (type === 'correct' && cardStatus === 'correct') {
+            card.style.display = "block";
+        } else if (type === 'incorrect' && cardStatus === 'incorrect') {
+            card.style.display = "block";
+        } else if (type === 'unattempted' && (cardStatus === 'unattempted' || cardStatus === 'cancelled')) {
+            card.style.display = "block";
         } else {
-            optionsHtml = q.options.map((opt, oIdx) => {
+            card.style.display = "none";
+        }
+    });
+}
+
+function renderExamResultsUI(resData) {
+    document.getElementById("examScreen").style.display = "none";
+    document.getElementById("resultsScreen").style.display = "block";
+    document.getElementById("resultsScreen").scrollTop = 0;
+
+    const titleElem = document.getElementById("resultsExamTitle");
+    if (titleElem) {
+        titleElem.innerHTML = `<strong>${resData.paper_id}</strong> &bull; GSSSB Combined Competitive Exam (CCE Group A & B)`;
+    }
+
+    document.getElementById("resTotal").innerText = resData.total_questions;
+    document.getElementById("resCorrect").innerText = resData.correct_count;
+    document.getElementById("resIncorrect").innerText = resData.incorrect_count;
+    document.getElementById("resUnattempted").innerText = resData.unattempted_count;
+    document.getElementById("resScore").innerText = resData.net_score;
+
+    const fAll = document.getElementById("filterAllBtn");
+    if (fAll) fAll.innerText = `All Questions (${resData.total_questions})`;
+    const fCorr = document.getElementById("filterCorrectBtn");
+    if (fCorr) fCorr.innerText = `✔ Correct (${resData.correct_count})`;
+    const fIncorr = document.getElementById("filterIncorrectBtn");
+    if (fIncorr) fIncorr.innerText = `✖ Incorrect (${resData.incorrect_count})`;
+    const fUnatt = document.getElementById("filterUnattemptedBtn");
+    if (fUnatt) fUnatt.innerText = `⚪ Unattempted / E (${resData.unattempted_count})`;
+
+    const reviewContainer = document.getElementById("reviewContainer");
+    reviewContainer.innerHTML = "";
+
+    const jumpPalette = document.getElementById("jumpPaletteContainer");
+    if (jumpPalette) jumpPalette.innerHTML = "";
+
+    resData.review.forEach(q => {
+        const uAns = q.user_ans;
+        const cAns = q.correct_ans;
+        const isCancelled = q.is_cancelled;
+        const isCorrect = q.is_correct;
+        const isUnattempted = (q.status === 'unattempted');
+
+        if (jumpPalette) {
+            const jumpBadge = document.createElement("a");
+            jumpBadge.href = `#review-q-${q.number}`;
+            jumpBadge.innerText = q.number;
+            if (isCancelled) {
+                jumpBadge.className = "jump-badge jump-badge-cancelled";
+            } else if (isCorrect) {
+                jumpBadge.className = "jump-badge jump-badge-correct";
+            } else if (isUnattempted) {
+                jumpBadge.className = "jump-badge jump-badge-unattempted";
+            } else {
+                jumpBadge.className = "jump-badge jump-badge-incorrect";
+            }
+            jumpPalette.appendChild(jumpBadge);
+        }
+
+        const card = document.createElement("div");
+        card.id = `review-q-${q.number}`;
+        card.className = "review-card";
+        card.setAttribute("data-status", q.status);
+        card.style.borderColor = isCancelled ? '#94a3b8' : (isCorrect ? '#86efac' : (isUnattempted ? '#cbd5e1' : '#fca5a5'));
+
+        let optionsHtml = '<div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">';
+        if (isCancelled) {
+            optionsHtml += `<div style="padding: 12px 18px; border: 1.5px dashed #dc2626; background: #fee2e2; color: #dc2626; font-weight: 700; border-radius: 8px;">Discrepancy found. This question is ignored for all candidates (0.00 Marks).</div>`;
+        } else {
+            (q.options || []).forEach((opt, oIdx) => {
                 const optNum = oIdx + 1;
-                const isUserSelected = userAns === optNum;
-                const isRightOption = correctAns === optNum;
-                
-                let optStyle = "padding: 6px 12px; border: 1.5px solid #ddd; border-radius: 4px; display: flex; align-items: center; gap: 10px; background-color: white; margin-bottom: 5px;";
-                if (isRightOption) {
-                    optStyle = "padding: 6px 12px; border: 1.5px solid #20bf6b; border-radius: 4px; display: flex; align-items: center; gap: 10px; background-color: #d4edda; font-weight: bold; margin-bottom: 5px;";
-                } else if (isUserSelected) {
-                    optStyle = "padding: 6px 12px; border: 1.5px solid #eb3b5a; border-radius: 4px; display: flex; align-items: center; gap: 10px; background-color: #f8d7da; margin-bottom: 5px;";
+                const optLetter = String.fromCharCode(64 + optNum);
+                const isThisCorrect = (cAns === optNum);
+                const isThisChosen = (uAns === optNum);
+
+                let optBorder = '#e2e8f0';
+                let optBg = '#ffffff';
+                let badgeHtml = '';
+
+                if (isThisCorrect && isThisChosen) {
+                    optBorder = '#16a34a';
+                    optBg = '#dcfce7';
+                    badgeHtml = `<span style="background: #16a34a; color: white; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; margin-left: auto; white-space: nowrap;"><i class="fa-solid fa-circle-check"></i> Correct & Selected (+1.00)</span>`;
+                } else if (isThisCorrect) {
+                    optBorder = '#16a34a';
+                    optBg = '#f0fdf4';
+                    badgeHtml = `<span style="background: #16a34a; color: white; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; margin-left: auto; white-space: nowrap;"><i class="fa-solid fa-check"></i> Official Correct</span>`;
+                } else if (isThisChosen) {
+                    optBorder = '#dc2626';
+                    optBg = '#fee2e2';
+                    badgeHtml = `<span style="background: #dc2626; color: white; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; margin-left: auto; white-space: nowrap;"><i class="fa-solid fa-xmark"></i> Your Selection (Wrong, -0.25)</span>`;
                 }
-                
-                let badgeHtml = "";
-                if (isRightOption && isUserSelected) {
-                    badgeHtml = `<span style="color: #155724; font-size: 11px; margin-left: auto; background-color: #c3e6cb; padding: 2px 6px; border-radius: 3px;">Your Choice & Correct</span>`;
-                } else if (isRightOption) {
-                    badgeHtml = `<span style="color: #155724; font-size: 11px; margin-left: auto; background-color: #c3e6cb; padding: 2px 6px; border-radius: 3px;">Correct Answer</span>`;
-                } else if (isUserSelected) {
-                    badgeHtml = `<span style="color: #721c24; font-size: 11px; margin-left: auto; background-color: #f5c6cb; padding: 2px 6px; border-radius: 3px;">Your Choice (Incorrect)</span>`;
-                }
-                
-                let optContent = "";
-                if (opt.text) {
-                    optContent = `<span>${opt.text}</span>`;
-                } else {
-                    optContent = `<img src="${opt.path}" style="max-height: 25px; vertical-align: middle;">`;
-                }
-                
-                return `
-                    <div style="${optStyle}">
-                        <span style="font-weight: bold; color: #4b6584;">${String.fromCharCode(65 + oIdx)}.</span>
-                        ${optContent}
+
+                optionsHtml += `
+                    <div style="display: flex; align-items: center; gap: 12px; border: 1.5px solid ${optBorder}; background: ${optBg}; padding: 12px 18px; border-radius: 8px; font-size: 15.5px;">
+                        <span style="font-size: 16px; font-weight: 800; color: ${isThisCorrect ? '#16a34a' : (isThisChosen ? '#dc2626' : '#3867d6')}; min-width: 28px;">${optLetter}.</span>
+                        <div style="flex-grow: 1; font-size: 15.5px; color: #1e293b;">
+                            ${opt.path ? `<img src="${opt.path}" style="max-height: 55px; max-width: 85%; vertical-align: middle;">` : `<span>${opt.text || ('Option ' + optLetter)}</span>`}
+                        </div>
                         ${badgeHtml}
                     </div>
                 `;
-            }).join('');
-            
-            // Add static option E review row
-            let optEStyle = "padding: 6px 12px; border: 1.5px solid #ddd; border-radius: 4px; display: flex; align-items: center; gap: 10px; background-color: white;";
-            let eBadge = "";
-            if (userAns === 5) {
-                optEStyle = "padding: 6px 12px; border: 1.5px solid #7f8c8d; border-radius: 4px; display: flex; align-items: center; gap: 10px; background-color: #e2e3e5; font-weight: bold;";
-                eBadge = `<span style="color: #383d41; font-size: 11px; margin-left: auto; background-color: #d6d8db; padding: 2px 6px; border-radius: 3px;">Your Choice</span>`;
+            });
+
+            if (uAns === 5) {
+                optionsHtml += `
+                    <div style="display: flex; align-items: center; gap: 12px; border: 1.5px solid #94a3b8; background: #f1f5f9; padding: 12px 18px; border-radius: 8px; font-size: 15.5px;">
+                        <span style="font-size: 16px; font-weight: 800; color: #475569; min-width: 28px;">E.</span>
+                        <div style="flex-grow: 1; font-size: 15.5px; color: #475569; font-weight: 600;">Not Attempted (અનએટેમ્પ્ટેડ)</div>
+                        <span style="background: #64748b; color: white; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; margin-left: auto; white-space: nowrap;">Your Selection (0.00 Marks)</span>
+                    </div>
+                `;
             }
-            
-            optionsHtml += `
-                <div style="${optEStyle}">
-                    <span style="font-weight: bold; color: #4b6584;">E.</span>
-                    <span>Not Attempted (અનએટેમ્પ્ટેડ)</span>
-                    ${eBadge}
-                </div>
-            `;
         }
-        
-        // Assemble card
-        const cardHtml = `
-            <div style="border: 1.5px solid ${cardBorderColor}; background-color: ${cardBgColor}; padding: 15px; margin-bottom: 20px; border-radius: 6px;">
-                <div style="font-weight: bold; font-size: 14px; border-bottom: 1.5px solid #ccd; padding-bottom: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-                    <span style="color: #2c3e50;">Question No. ${q.number}</span>
-                    <span style="color: ${statusColor}; font-weight: bold; font-size: 13px;">${statusText}</span>
-                </div>
-                <div style="font-size: 15px; line-height: 1.4; color: #2c3e50; margin-bottom: 10px; font-weight: 500;">
-                    ${q.english_prompt.replace(/\n/g, '<br>')}
-                </div>
-                ${q.gujarati_prompt_path ? `<img src="${q.gujarati_prompt_path}" style="max-width: 100%; display: block; margin-bottom: 15px; border: 1px solid #ddd; padding: 4px; background-color: white;">` : ''}
-                
-                <div style="display: flex; flex-direction: column; gap: 4px;">
-                    ${optionsHtml}
-                </div>
+        optionsHtml += '</div>';
+
+        let statusBadgeText = '';
+        if (isCancelled) {
+            statusBadgeText = `<span style="color: #475569; background: #e2e8f0; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 800;"><i class="fa-solid fa-triangle-exclamation"></i> Cancelled (0.00 Marks)</span>`;
+        } else if (isCorrect) {
+            statusBadgeText = `<span style="color: #15803d; background: #dcfce7; border: 1px solid #86efac; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 800;"><i class="fa-solid fa-circle-check"></i> Correct (+1.00 Mark)</span>`;
+        } else if (isUnattempted) {
+            statusBadgeText = `<span style="color: #64748b; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 800;">— Unattempted (0.00 Marks)</span>`;
+        } else {
+            statusBadgeText = `<span style="color: #b91c1c; background: #fee2e2; border: 1px solid #fca5a5; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 800;"><i class="fa-solid fa-circle-xmark"></i> Incorrect (-0.25 Mark)</span>`;
+        }
+
+        let cleanPrompt = (q.english_prompt || '').replace(/^Yes\s*/i, '').trim();
+
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 16px;">
+                <span style="font-size: 18px; font-weight: 800; color: #1e293b;">Question No. ${q.number}</span>
+                ${statusBadgeText}
+            </div>
+            ${cleanPrompt ? `<div style="font-size: 16px; line-height: 1.65; color: #0f172a; font-weight: 500; margin-bottom: 14px; white-space: pre-line;">${cleanPrompt}</div>` : ''}
+            ${q.gujarati_prompt_path ? `<img src="${q.gujarati_prompt_path}" style="max-width: 100%; display: block; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 8px; background: #ffffff; margin-bottom: 16px;" alt="Question ${q.number} Gujarati Prompt">` : ''}
+            ${optionsHtml}
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 14.5px; font-weight: 600;">
+                <span>Your Selection: <strong style="color: ${isCorrect ? '#16a34a' : (isUnattempted ? '#64748b' : '#dc2626')}; font-size: 15px;">${uAns == 5 ? 'Option E (Not Attempted)' : (uAns ? 'Option ' + String.fromCharCode(64 + uAns) : 'None (Unattempted)')}</strong></span>
+                <span>Official Answer Key: <strong style="color: #16a34a; font-size: 15px;">${isCancelled ? 'Discrepancy / Cancelled' : (cAns ? 'Option ' + String.fromCharCode(64 + cAns) : 'N/A')}</strong></span>
+                <span>Marks Awarded: <strong style="color: ${isCorrect ? '#16a34a' : (isUnattempted ? '#64748b' : '#dc2626')}; font-size: 15px;">${isCorrect ? '+1.00' : (isUnattempted ? '0.00' : '-0.25')}</strong></span>
             </div>
         `;
-        
-        reviewContainer.innerHTML += cardHtml;
+        reviewContainer.appendChild(card);
     });
-    
-    const rawScore = correct * 1.0 - incorrect * 0.25;
-    
-    // Hide exam screen, show results screen
-    document.getElementById("examScreen").style.display = "none";
-    document.getElementById("resultsScreen").style.display = "block";
-    
-    // Fill result details
-    document.getElementById("resTotal").innerText = totalQuestions;
-    document.getElementById("resCorrect").innerText = correct;
-    document.getElementById("resIncorrect").innerText = incorrect;
-    document.getElementById("resUnattempted").innerText = unattempted;
-    document.getElementById("resScore").innerText = rawScore.toFixed(2);
 }
 
 function backToHome() {

@@ -453,37 +453,24 @@ def authenticate_user(email, password, device_id=None, device_info=None, ip_addr
     row = cursor.fetchone()
     if not row:
         conn.close()
-        return {'status': 'ERROR', 'message': 'No account found with this email.'}
+        return {'status': 'ERROR', 'message': 'No account found with this email / આ ઈમેઈલ સાથે કોઈ ખાતું મળ્યું નથી.'}
         
     user = dict(row)
     if not check_password_hash(user['password_hash'], password):
         conn.close()
-        return {'status': 'ERROR', 'message': 'Incorrect password.'}
+        return {'status': 'ERROR', 'message': 'Incorrect password / ખોટો પાસવર્ડ છે.'}
         
-    # Strict 1-Device Lock policy:
-    # - If no trusted device is bound yet, this device becomes bound (first login).
-    # - If this device matches the bound device, login directly.
-    # - If this is a DIFFERENT device, block login immediately to prevent account sharing.
-    # Admin accounts are exempt and can log in from any device.
-    trusted = user.get('trusted_device_id')
-    is_admin = user.get('is_admin')
-    if (device_id and trusted and trusted != device_id) and not is_admin:
-        conn.close()
-        return {
-            'status': 'ERROR',
-            'message': '🔒 Multi-Device Login Blocked: This account is registered on another device. Login from a second device is strictly prohibited. (આ એકાઉન્ટ બીજા ઉપકરણ પર રજીસ્ટર થયેલ છે. એકાઉન્ટ શેરિંગ અટકાવવા માટે બીજા ડિવાઇસમાંથી લોગિન બંધ કરેલ છે. નવું ડિવાઇસ બદલવા માટે Self-Reset Device નો ઉપયોગ કરો અથવા એડમિનનો સંપર્ક કરો.)'
-        }
-    
-    # Same device (or first ever login) -> issue session immediately.
+    # Valid credentials verified! Generate active single session.
+    # Issuing this new token automatically invalidates any older session on other devices/tabs.
     new_session_token = str(uuid.uuid4())
     now_str = datetime.datetime.now().isoformat()
-    device_to_set = device_id or trusted or str(uuid.uuid4())
+    device_to_set = device_id or user.get('trusted_device_id') or str(uuid.uuid4())
     
     cursor.execute('''
         UPDATE users
         SET current_session_token = ?, current_device_id = ?, trusted_device_id = ?, device_info = ?, last_ip = ?, last_active = ?
         WHERE id = ?
-    ''', (new_session_token, device_to_set, device_to_set, device_info or 'Unknown Device', ip_address or '127.0.0.1', now_str, user['id']))
+    ''', (new_session_token, device_to_set, device_to_set, device_info or 'Web Browser', ip_address or '127.0.0.1', now_str, user['id']))
     
     conn.commit()
     user['current_session_token'] = new_session_token
@@ -506,20 +493,11 @@ def authenticate_google_user(email, name, device_id=None, device_info=None, ip_a
     
     if row:
         user = dict(row)
-        trusted = user.get('trusted_device_id')
-        is_admin = user.get('is_admin')
-        if (device_id and trusted and trusted != device_id) and not is_admin:
-            conn.close()
-            return {
-                'status': 'ERROR',
-                'message': '🔒 Multi-Device Login Blocked: This account is registered on another device.'
-            }
-        
         cursor.execute('''
             UPDATE users
-            SET current_session_token = ?, current_device_id = ?, last_ip = ?, last_active = ?, device_info = ?
+            SET current_session_token = ?, current_device_id = ?, trusted_device_id = ?, last_ip = ?, last_active = ?, device_info = ?
             WHERE id = ?
-        ''', (new_session_token, device_to_set, ip_address or '127.0.0.1', now_str, device_info or 'Google Auth', user['id']))
+        ''', (new_session_token, device_to_set, device_to_set, ip_address or '127.0.0.1', now_str, device_info or 'Google Auth', user['id']))
         conn.commit()
         user['current_session_token'] = new_session_token
         user.pop('password_hash', None)
@@ -924,6 +902,7 @@ def google_auth_user(email, name, google_id=None, avatar_url=None, phone=None, d
     
     new_session_token = str(uuid.uuid4())
     now_str = datetime.datetime.now().isoformat()
+    dev_id = device_id or 'google_device'
     
     cursor.execute('SELECT * FROM users WHERE email = ?', (email_clean,))
     row = cursor.fetchone()
@@ -931,28 +910,19 @@ def google_auth_user(email, name, google_id=None, avatar_url=None, phone=None, d
     if row:
         user = dict(row)
         user_id = user['id']
-        trusted = user.get('trusted_device_id')
-        is_admin = user.get('is_admin')
-        if (device_id and trusted and trusted != device_id) and not is_admin:
-            conn.close()
-            return {
-                'status': 'ERROR',
-                'message': '🔒 Multi-Device Login Blocked: This account is registered on another device. (આ એકાઉન્ટ બીજા ઉપકરણ પર રજીસ્ટર થયેલ છે. એકાઉન્ટ શેરિંગ અટકાવવા માટે બીજા ડિવાઇસમાંથી લોગિન બંધ કરેલ છે.)'
-            }
         cursor.execute('''
             UPDATE users
-            SET current_session_token = ?, current_device_id = ?, trusted_device_id = COALESCE(trusted_device_id, ?), device_info = ?, last_ip = ?, last_active = ?,
+            SET current_session_token = ?, current_device_id = ?, trusted_device_id = ?, device_info = ?, last_ip = ?, last_active = ?,
                 google_id = COALESCE(google_id, ?), avatar_url = COALESCE(avatar_url, ?),
                 phone = CASE WHEN phone IS NULL OR phone = '' THEN ? ELSE phone END
             WHERE id = ?
-        ''', (new_session_token, device_id or 'google_device', device_id or 'google_device', device_info or 'Google Sign-In Device', ip_address or '127.0.0.1', now_str, 
+        ''', (new_session_token, dev_id, dev_id, device_info or 'Google Sign-In Device', ip_address or '127.0.0.1', now_str, 
               google_id, avatar_url, phone or '', user_id))
         conn.commit()
         is_new = False
     else:
         # Create new user via Google
         pw_hash = generate_password_hash(str(uuid.uuid4())) # random secure hash
-        dev_id = device_id or 'google_device'
         cursor.execute('''
             INSERT INTO users (name, email, phone, password_hash, google_id, avatar_url, current_session_token, current_device_id, trusted_device_id, device_info, last_ip, last_active)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -1002,13 +972,6 @@ def get_user_by_session(session_token, device_id=None):
     cursor.execute('SELECT * FROM users WHERE current_session_token = ?', (session_token,))
     row = cursor.fetchone()
     if not row:
-        conn.close()
-        return None
-        
-    # Device binding: if a device_id is supplied and differs from the session's
-    # registered device, treat the session as revoked (guards against token reuse
-    # on a non-trusted device).
-    if device_id and row['current_device_id'] and row['current_device_id'] != device_id:
         conn.close()
         return None
         
